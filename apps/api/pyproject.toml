@@ -1,0 +1,46 @@
+[project]
+name = "smorx-api"
+version = "0.1.0"
+description = "Software Evolution Intelligence System - FastAPI application API (Phase 1: Nebius + NVIDIA infrastructure layer)"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.141",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.4",
+    "openai>=1.60",
+    "contree-sdk>=0.3.6",
+    "contree-client>=0.4.0",
+    "httpx>=0.28",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.6",
+    "mypy>=1.10",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "ASYNC"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_configs = true
+exclude = ["tests/integration/"]
