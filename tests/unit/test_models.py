@@ -123,7 +123,11 @@ def test_all_tables_registered_on_base_metadata() -> None:
 
 
 def test_create_all_schema_succeeds_with_naming_convention(engine: object) -> None:
-    tables = {name: table for name, table in models.Base.metadata.tables.items() if name in EXPECTED_TABLES}
+    tables = {
+        name: table
+        for name, table in models.Base.metadata.tables.items()
+        if name in EXPECTED_TABLES
+    }
     assert set(tables) == EXPECTED_TABLES
     for table in tables.values():
         for constraint in list(table.constraints) + list(table.indexes):
@@ -131,7 +135,13 @@ def test_create_all_schema_succeeds_with_naming_convention(engine: object) -> No
 
 
 def test_version_lock_columns_present_on_immutable_tables() -> None:
-    for name in ("Certificate", "Claim", "IntentLedger", "VerificationPlan", "Constitution"):
+    for name in (
+        "Certificate",
+        "Claim",
+        "IntentLedger",
+        "VerificationPlan",
+        "Constitution",
+    ):
         cls = getattr(models, name)
         columns = cls.__table__.columns
         assert "version" in columns, name
@@ -140,7 +150,17 @@ def test_version_lock_columns_present_on_immutable_tables() -> None:
 
 def test_evidence_identity_columns() -> None:
     cols = models.Evidence.__table__.columns
-    for col in ("type", "occurred_at", "source", "provenance", "task_id", "run_id", "artifact", "machine_result", "hash"):
+    for col in (
+        "type",
+        "occurred_at",
+        "source",
+        "provenance",
+        "task_id",
+        "run_id",
+        "artifact",
+        "machine_result",
+        "hash",
+    ):
         assert col in cols, col
     assert cols["hash"].unique is True
     assert cols["id"].primary_key is True
@@ -177,7 +197,9 @@ def _seed_lifecycle_chain(session: Session) -> dict[str, object]:
         status="RUNNING",
         state="EXECUTING",
     )
-    claim = models.Claim(task=task, statement="Token refresh now rejects forged AUTH-017 requests")
+    claim = models.Claim(
+        task=task, statement="Token refresh now rejects forged AUTH-017 requests"
+    )
     evidence = models.Evidence(
         task=task,
         run=run,
@@ -213,7 +235,18 @@ def _seed_lifecycle_chain(session: Session) -> dict[str, object]:
     )
     delta.certificate = certificate
     session.add_all(
-        [project, repository, change, task, run, agent_run, claim, evidence, delta, certificate]
+        [
+            project,
+            repository,
+            change,
+            task,
+            run,
+            agent_run,
+            claim,
+            evidence,
+            delta,
+            certificate,
+        ]
     )
     session.commit()
     return {
@@ -236,31 +269,52 @@ def test_lifecycle_chain_navigation(engine: object) -> None:
         expected = {key: row.id for key, row in rows.items() if key != "project"}
 
     with Session(engine) as session:
-        project = session.scalar(select(models.Project).where(models.Project.slug == "payments-api"))
+        project = session.scalar(
+            select(models.Project).where(models.Project.slug == "payments-api")
+        )
         assert project is not None
         assert project.repositories[0].id == expected["repository"]
         assert project.repositories[0].changes[0].id == expected["change"]
         assert project.repositories[0].changes[0].tasks[0].id == expected["task"]
-        task = session.scalar(select(models.Task).where(models.Task.id == expected["task"]))
+        task = session.scalar(
+            select(models.Task).where(models.Task.id == expected["task"])
+        )
         assert task is not None
         assert task.runs[0].id == expected["run"]
         assert task.runs[0].agent_runs[0].id == expected["agent_run"]
-        agent_run = session.scalar(select(models.AgentRun).where(models.AgentRun.id == expected["agent_run"]))
+        agent_run = session.scalar(
+            select(models.AgentRun).where(models.AgentRun.id == expected["agent_run"])
+        )
         assert agent_run is not None
         assert agent_run.evidence_items[0].id == expected["evidence"]
-        evidence = session.scalar(select(models.Evidence).where(models.Evidence.id == expected["evidence"]))
+        evidence = session.scalar(
+            select(models.Evidence).where(models.Evidence.id == expected["evidence"])
+        )
         assert evidence is not None
         assert evidence.claim.id == expected["claim"]
         assert evidence.claim.task.id == expected["task"]
-        claim = session.scalar(select(models.Claim).where(models.Claim.id == expected["claim"]))
+        claim = session.scalar(
+            select(models.Claim).where(models.Claim.id == expected["claim"])
+        )
         assert claim is not None
         assert claim.behavioral_deltas[0].id == expected["delta"]
-        delta = session.scalar(select(models.BehavioralDelta).where(models.BehavioralDelta.id == expected["delta"]))
+        delta = session.scalar(
+            select(models.BehavioralDelta).where(
+                models.BehavioralDelta.id == expected["delta"]
+            )
+        )
         assert delta is not None
         assert delta.certificate.id == expected["certificate"]
-        certificate = session.scalar(select(models.Certificate).where(models.Certificate.id == expected["certificate"]))
+        certificate = session.scalar(
+            select(models.Certificate).where(
+                models.Certificate.id == expected["certificate"]
+            )
+        )
         assert certificate is not None
-        assert certificate.behavioral_deltas[0].claim.statement == "Token refresh now rejects forged AUTH-017 requests"
+        assert (
+            certificate.behavioral_deltas[0].claim.statement
+            == "Token refresh now rejects forged AUTH-017 requests"
+        )
         assert certificate.evidence_hash == _sha256_hex("tests/test_auth.py:42-passed")
 
 
@@ -289,7 +343,9 @@ def test_evidence_identity_and_hash_uniqueness(engine: object) -> None:
     for digest in (first_hash, second_hash):
         assert len(digest) == 64
         assert digest == _sha256_hex(
-            "artifact/report-1.json" if digest == first_hash else "artifact/report-2.json"
+            "artifact/report-1.json"
+            if digest == first_hash
+            else "artifact/report-2.json"
         )
 
     assert first_hash == _sha256_hex("artifact/report-1.json")
@@ -334,7 +390,11 @@ def test_consequential_event_insert_and_read(engine: object) -> None:
         event_id = event.id
 
     with Session(engine) as session:
-        fetched = session.scalar(select(models.ConsequentialEvent).where(models.ConsequentialEvent.id == event_id))
+        fetched = session.scalar(
+            select(models.ConsequentialEvent).where(
+                models.ConsequentialEvent.id == event_id
+            )
+        )
         assert fetched is not None
         assert fetched.entity_type == "Change"
         assert fetched.entity_id == change_id

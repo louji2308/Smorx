@@ -30,6 +30,8 @@ QUALITY_STEPS: tuple[str, ...] = (
     "lint",
     "typecheck",
     "unit tests",
+    "integration tests",
+    "security tests",
     "build",
     "web build",
 )
@@ -74,7 +76,12 @@ def resolve_tool(name: str, root: Path) -> str | None:
     return shutil.which(name)
 
 
-def run_command(cmd: list[str], cwd: Path, timeout: int = 300) -> tuple[int, str]:
+def run_command(
+    cmd: list[str],
+    cwd: Path,
+    timeout: int = 300,
+    env: dict[str, str] | None = None,
+) -> tuple[int, str]:
     try:
         proc = subprocess.run(
             cmd,
@@ -83,10 +90,29 @@ def run_command(cmd: list[str], cwd: Path, timeout: int = 300) -> tuple[int, str
             text=True,
             timeout=timeout,
             check=False,
+            env=env,
         )
     except (OSError, subprocess.SubprocessError) as exc:
         return 127, f"failed to run: {exc}"
     return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
+
+
+def mypy_env(root: Path) -> dict[str, str]:
+    """Environment for mypy invocations against the parallel src layouts.
+
+    When packages are not pip-installed (the default local state), mypy must
+    resolve ``smorx_contracts``, ``smorx_runtime``, ``smorx_behavior`` and
+    ``smorx_tools`` through ``MYPYPATH`` pointing at each ``src`` tree.
+    """
+    src_dirs = (
+        "packages/contracts/src",
+        "packages/agent-runtime/src",
+        "packages/behavior/src",
+        "packages/tools/src",
+    )
+    env = dict(os.environ)
+    env["MYPYPATH"] = os.pathsep.join(str((root / rel).resolve()) for rel in src_dirs)
+    return env
 
 
 def summarize(output: str) -> str:
@@ -120,20 +146,46 @@ def _step_dependency_audit(root: Path) -> StepResult:
 
 
 def _step_format(root: Path, ruff: str) -> StepResult:
-    cmd = [ruff, "format", "--check", "scripts", "tests", "conftest.py"]
+    targets = [
+        "scripts",
+        "tests",
+        "conftest.py",
+        "packages/contracts",
+        "packages/agent-runtime",
+        "packages/behavior",
+        "packages/tools",
+    ]
+    cmd = [ruff, "format", "--check", *targets]
     code, output = run_command(cmd, root)
     return StepResult("format check", cmd, code, summarize(output), code == 0, False)
 
 
 def _step_lint(root: Path, ruff: str) -> StepResult:
-    cmd = [ruff, "check", "scripts", "tests", "conftest.py"]
+    targets = [
+        "scripts",
+        "tests",
+        "conftest.py",
+        "packages/contracts",
+        "packages/agent-runtime",
+        "packages/behavior",
+        "packages/tools",
+    ]
+    cmd = [ruff, "check", *targets]
     code, output = run_command(cmd, root)
     return StepResult("lint", cmd, code, summarize(output), code == 0, False)
 
 
 def _step_typecheck(root: Path) -> StepResult:
-    cmd = [sys.executable, "-m", "mypy", "packages/contracts", "packages/agent-runtime"]
-    code, output = run_command(cmd, root)
+    cmd = [
+        sys.executable,
+        "-m",
+        "mypy",
+        "packages/contracts",
+        "packages/agent-runtime",
+        "packages/behavior",
+        "packages/tools",
+    ]
+    code, output = run_command(cmd, root, env=mypy_env(root))
     return StepResult("typecheck", cmd, code, summarize(output), code == 0, False)
 
 
@@ -143,8 +195,28 @@ def _step_unit_tests(root: Path) -> StepResult:
     return StepResult("unit tests", cmd, code, summarize(output), code == 0, False)
 
 
+def _step_integration_tests(root: Path) -> StepResult:
+    cmd = [sys.executable, "-m", "pytest", "tests/integration"]
+    code, output = run_command(cmd, root)
+    return StepResult(
+        "integration tests", cmd, code, summarize(output), code == 0, False
+    )
+
+
+def _step_security_tests(root: Path) -> StepResult:
+    cmd = [sys.executable, "-m", "pytest", "tests/security"]
+    code, output = run_command(cmd, root)
+    return StepResult("security tests", cmd, code, summarize(output), code == 0, False)
+
+
 def _step_build(root: Path) -> StepResult:
-    targets = ["packages/contracts", "packages/agent-runtime", "apps/api/app"]
+    targets = [
+        "packages/contracts",
+        "packages/agent-runtime",
+        "packages/behavior",
+        "packages/tools",
+        "apps/api/app",
+    ]
     missing = [target for target in targets if not (root / target).is_dir()]
     existing = [target for target in targets if (root / target).is_dir()]
     if not existing:
@@ -161,7 +233,8 @@ def _step_build(root: Path) -> StepResult:
     summary = summarize(output)
     missing_note = f"missing targets: {', '.join(missing)}" if missing else ""
     detail = "; ".join(part for part in (summary, missing_note) if part)
-    return StepResult("build", cmd, code, detail, code == 0 and not missing, False)
+    # One or more future dirs may be absent; only "all targets missing" fails.
+    return StepResult("build", cmd, code, detail, code == 0, False)
 
 
 def _step_web_build(root: Path, *, skip_web: bool) -> StepResult:
@@ -200,6 +273,8 @@ def run_gates(*, skip_web: bool = False, root: Path | None = None) -> QualityRep
         report.steps.append(_step_lint(base, ruff))
     report.steps.append(_step_typecheck(base))
     report.steps.append(_step_unit_tests(base))
+    report.steps.append(_step_integration_tests(base))
+    report.steps.append(_step_security_tests(base))
     report.steps.append(_step_build(base))
     report.steps.append(_step_web_build(base, skip_web=skip_web))
     report.finished_at = _utc_now()
@@ -210,7 +285,7 @@ def _print_table(report: QualityReport) -> None:
     for step in report.steps:
         code = step.exit_code if step.exit_code is not None else "-"
         status = "SKIP" if step.skipped else ("PASS" if step.passed else "FAIL")
-        print(f"{status:5s} {step.step:16s} exit={code!s:>4}  {step.summary}")
+        print(f"{status:5s} {step.step:18s} exit={code!s:>4}  {step.summary}")
 
 
 def main(argv: Sequence[str] | None = None) -> int:

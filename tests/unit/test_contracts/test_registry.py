@@ -96,14 +96,28 @@ def test_evidence_without_claim_rejected() -> None:
     registry = smorx_contracts.get_registry()
     valid = smorx_contracts.sample_instance("evidence")
     with pytest.raises(ContractValidationError):
-        registry.validate("evidence", {k: v for k, v in valid.items() if k != "claim_id"})
+        registry.validate(
+            "evidence", {k: v for k, v in valid.items() if k != "claim_id"}
+        )
 
 
 def test_evidence_with_claim_passes() -> None:
     registry = smorx_contracts.get_registry()
-    assert registry.validate("evidence", smorx_contracts.sample_instance("evidence")) is True
-    stripped = {k: v for k, v in smorx_contracts.sample_instance("evidence").items() if k != "claim_id"}
-    assert smorx_contracts.validate_contract("evidence", {"claim_id": "AUTH-017", **stripped}) is True
+    assert (
+        registry.validate("evidence", smorx_contracts.sample_instance("evidence"))
+        is True
+    )
+    stripped = {
+        k: v
+        for k, v in smorx_contracts.sample_instance("evidence").items()
+        if k != "claim_id"
+    }
+    assert (
+        smorx_contracts.validate_contract(
+            "evidence", {"claim_id": "AUTH-017", **stripped}
+        )
+        is True
+    )
 
 
 def test_certificate_without_verification_evidence_rejected() -> None:
@@ -129,7 +143,10 @@ def test_certificate_without_commit_or_delta_rejected() -> None:
 
 def test_certificate_complete_passes() -> None:
     registry = smorx_contracts.get_registry()
-    assert registry.validate("certificate", smorx_contracts.sample_instance("certificate")) is True
+    assert (
+        registry.validate("certificate", smorx_contracts.sample_instance("certificate"))
+        is True
+    )
 
 
 def test_tool_invocation_may_carry_valid_execution_result() -> None:

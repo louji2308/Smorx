@@ -17,7 +17,9 @@ __all__ = ["create_engine_from_config", "create_sync_engine", "session_factory"]
 
 
 def _is_sqlite_memory(url: str) -> bool:
-    return url.startswith("sqlite") and ("memory" in url or url.endswith("://") or url.endswith(":"))
+    return url.startswith("sqlite") and (
+        "memory" in url or url.endswith("://") or url.endswith(":")
+    )
 
 
 def _async_sqlite_url(url: str) -> str:

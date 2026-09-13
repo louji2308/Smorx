@@ -21,6 +21,7 @@ ADR numbering is sequential and never reused. A numbering gap indicates a supers
 | ADR-0005 | Versioning and Immutability | Accepted | 2026-09-12 | — |
 | ADR-0006 | Testing Strategy | Accepted | 2026-09-12 | — |
 | ADR-0007 | Phase-Gate Strategy | Accepted | 2026-09-12 | — |
+| ADR-0008 | Phase 3/4 Orchestration and Control-Plane Architecture | Accepted | 2026-09-13 | — |
 
 ## Status definitions
 

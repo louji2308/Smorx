@@ -1,0 +1,26 @@
+# REFERENCE ONLY - not provisioned; requires credentials and validated API
+# shapes (see infrastructure/nebius/README.md).
+api_version: v1
+kind: serverless-job
+provider: nebius-token-factory
+client:
+  endpoint: <ENDPOINT_URL>
+  api_key_from_env: NEBIUS_API_KEY
+  project_id_from_env: NEBIUS_AI_PROJECT
+job:
+  name: smorx-inference-job
+  payload:
+    runtime: python3.12
+    entrypoint: <ENTRYPOINT_REF>
+    command: ["<COMMAND>", "<ARG>"]
+    environment:
+      MODEL_ROUTE: <MODEL_ROUTE>
+  execution:
+    timeout_seconds: 300
+    max_retries: 1
+    cpu: <CPU_LIMIT>
+    memory: <MEMORY_LIMIT>
+result:
+  output_storage: <RESULT_STORAGE_REF>
+status:
+  note: Not provisioned. Requires NEBIUS_API_KEY and NEBIUS_AI_PROJECT/NEBIUS_PROJECT_ID.

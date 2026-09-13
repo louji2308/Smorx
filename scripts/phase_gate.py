@@ -1,14 +1,25 @@
-"""Machine-executable Phase 0 gate for the Software Evolution Intelligence System.
+"""Machine-executable phase gates for the Software Evolution Intelligence System.
 
-    python scripts/phase_gate.py [--live] [--json]
+    python scripts/phase_gate.py [--phase 0|2|3|4] [--live] [--json]
 
-Evaluates every Phase-0 exit-gate line item and emits ``PHASE_0_PASS`` or
-``PHASE_0_BLOCKED`` with a machine-readable evidence map. Exit code is ``0``
-only for ``PHASE_0_PASS``.
+Evaluates a phase exit gate and emits ``PHASE_N_PASS`` or ``PHASE_N_BLOCKED``
+with a machine-readable evidence map. Exit code is ``0`` only for ``PASS``.
 
-The pure helpers ``structure_checks`` and ``finalize_phase0`` are exported so
-they can be exercised by unit tests without depending on the parallel packages
-landed by other agents.
+* Phase 0 — repository structure, contracts, quality, env, health.
+* Phase 2 — behavioral data model: contracts importable, ``smorx_behavior``
+  packages, migration revision present, full Phase-2 test suites green, quality
+  gate extended to ``packages/behavior``.
+* Phase 3 — orchestrator runtime: ``smorx_runtime`` structure, imported
+  orchestrator/graph/waves/toolgate symbols, Phase-3 unit/integration suites
+  green, ruff+format+mypy clean (with ``MYPYPATH``).
+* Phase 4 — tool/control plane: ``smorx_tools`` structure, ``ControlPlane``
+  satisfying ``CapabilityGateway``, Phase-4 unit/security/integration suites
+  green, ruff+format+mypy clean.
+
+The pure helpers ``structure_checks``, ``finalize_phase0``, ``finalize_phase2``,
+``finalize_phase3`` and ``finalize_phase4`` are exported so they can be
+exercised by unit tests without depending on the parallel packages landed by
+other agents.
 """
 
 from __future__ import annotations
@@ -51,6 +62,86 @@ REQUIRED_PATHS: tuple[str, ...] = (
     ".github/workflows",
 )
 
+PHASE2_PATHS: tuple[str, ...] = (
+    "packages/behavior/src/smorx_behavior/db",
+    "packages/behavior/src/smorx_behavior/models",
+    "packages/behavior/src/smorx_behavior/evidence",
+    "packages/behavior/src/smorx_behavior/versioning",
+    "packages/behavior/src/smorx_behavior/repo",
+    "packages/behavior/src/smorx_behavior/seed",
+    "packages/behavior/migrations/versions",
+    "packages/contracts/src/smorx_contracts",
+    "tests/unit/test_models.py",
+    "tests/unit/test_evidence.py",
+    "tests/unit/test_versioning.py",
+    "tests/integration/test_references.py",
+    "tests/integration/test_certificate.py",
+    "tests/integration/test_lifecycle.py",
+)
+
+PHASE3_PATHS: tuple[str, ...] = (
+    "packages/agent-runtime/src/smorx_runtime",
+    "tests/unit/test_agents.py",
+    "tests/unit/test_graph.py",
+    "tests/unit/test_waves.py",
+    "tests/unit/test_telemetry.py",
+    "tests/unit/test_orchestrator.py",
+    "tests/integration/test_phase3_phase4_integration.py",
+)
+
+PHASE4_PATHS: tuple[str, ...] = (
+    "packages/tools/src/smorx_tools",
+    "tests/unit/test_tool_layer.py",
+    "tests/unit/test_policy_control_plane.py",
+    "tests/unit/test_sandbox_human_repo.py",
+    "tests/security/test_adversarial_guardrails.py",
+    "tests/integration/test_phase3_phase4_integration.py",
+)
+
+_SRC_PATHS: tuple[str, ...] = (
+    "packages/contracts/src",
+    "packages/behavior/src",
+    "packages/agent-runtime/src",
+    "packages/tools/src",
+)
+
+PHASE2_TEST_SUITES: tuple[str, ...] = (
+    "tests/unit/test_models.py",
+    "tests/unit/test_db_infra.py",
+    "tests/unit/test_evidence.py",
+    "tests/unit/test_versioning.py",
+    "tests/integration",
+)
+
+PHASE3_TEST_SUITES: tuple[str, ...] = (
+    "tests/unit/test_agents.py",
+    "tests/unit/test_graph.py",
+    "tests/unit/test_waves.py",
+    "tests/unit/test_telemetry.py",
+    "tests/unit/test_orchestrator.py",
+    "tests/integration/test_phase3_phase4_integration.py",
+)
+
+PHASE4_TEST_SUITES: tuple[str, ...] = (
+    "tests/unit/test_tool_layer.py",
+    "tests/unit/test_policy_control_plane.py",
+    "tests/unit/test_sandbox_human_repo.py",
+    "tests/security/test_adversarial_guardrails.py",
+    "tests/integration/test_phase3_phase4_integration.py",
+)
+
+PHASE2_MYPY_TARGETS: tuple[str, ...] = (
+    "packages/contracts",
+    "packages/behavior",
+)
+
+PHASE3_MYPY_TARGETS: tuple[str, ...] = (
+    "packages/agent-runtime",
+    "packages/tools",
+)
+
+PHASE4_MYPY_TARGETS: tuple[str, ...] = ("packages/tools",)
+
 _CONTRACT_COUNT = 17
 _HEALTH_URL = "http://127.0.0.1:8765/health"
 _HEALTH_TIMEOUT_SECONDS = 30
@@ -86,7 +177,12 @@ def _repo_root() -> Path:
     return Path.cwd()
 
 
-def _run(cmd: Sequence[str], cwd: Path, timeout: int = 300) -> tuple[int, str]:
+def _run(
+    cmd: Sequence[str],
+    cwd: Path,
+    timeout: int = 300,
+    env: dict[str, str] | None = None,
+) -> tuple[int, str]:
     try:
         proc = subprocess.run(
             cmd,
@@ -95,10 +191,31 @@ def _run(cmd: Sequence[str], cwd: Path, timeout: int = 300) -> tuple[int, str]:
             text=True,
             timeout=timeout,
             check=False,
+            env=env,
         )
     except (OSError, subprocess.SubprocessError) as exc:
         return 127, f"failed to run: {exc}"
     return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
+
+
+def _build_mypy_env(root: Path) -> dict[str, str]:
+    """Environment with ``MYPYPATH`` pointing at the parallel ``src`` trees.
+
+    Required whenever the packages are not pip-installed so mypy can resolve
+    ``smorx_contracts``, ``smorx_runtime``, ``smorx_behavior`` and
+    ``smorx_tools``.
+    """
+    env = dict(os.environ)
+    env["MYPYPATH"] = os.pathsep.join(
+        str((root / rel).resolve())
+        for rel in (
+            "packages/contracts/src",
+            "packages/agent-runtime/src",
+            "packages/behavior/src",
+            "packages/tools/src",
+        )
+    )
+    return env
 
 
 def _tail(output: str, limit: int = 2) -> str:
@@ -123,9 +240,49 @@ def finalize_phase0(
     phase: str = "0",
     started_at: str | None = None,
 ) -> PhaseGateResult:
-    """Derive the gate status from the collected checks."""
+    """Derive the Phase-0 gate status from the collected checks."""
+    return finalize(checks, phase=phase, started_at=started_at)
+
+
+def finalize_phase2(
+    checks: Sequence[GateCheckResult],
+    *,
+    phase: str = "2",
+    started_at: str | None = None,
+) -> PhaseGateResult:
+    """Derive the Phase-2 gate status from the collected checks."""
+    return finalize(checks, phase=phase, started_at=started_at)
+
+
+def finalize_phase3(
+    checks: Sequence[GateCheckResult],
+    *,
+    phase: str = "3",
+    started_at: str | None = None,
+) -> PhaseGateResult:
+    """Derive the Phase-3 gate status from the collected checks."""
+    return finalize(checks, phase=phase, started_at=started_at)
+
+
+def finalize_phase4(
+    checks: Sequence[GateCheckResult],
+    *,
+    phase: str = "4",
+    started_at: str | None = None,
+) -> PhaseGateResult:
+    """Derive the Phase-4 gate status from the collected checks."""
+    return finalize(checks, phase=phase, started_at=started_at)
+
+
+def finalize(
+    checks: Sequence[GateCheckResult],
+    *,
+    phase: str,
+    started_at: str | None = None,
+) -> PhaseGateResult:
+    """Derive the gate status from the collected checks (shared core)."""
     failures = [f"{check.name}: {check.detail}" for check in checks if not check.passed]
-    status = "PHASE_0_PASS" if not failures else "PHASE_0_BLOCKED"
+    status = f"PHASE_{phase}_PASS" if not failures else f"PHASE_{phase}_BLOCKED"
     evidence = {check.name: check.detail for check in checks}
     return PhaseGateResult(
         phase=phase,
@@ -197,10 +354,13 @@ def _check_quality(root: Path) -> GateCheckResult:
     lint_code, lint_output = _run(
         [ruff, "check", "scripts", "tests", "conftest.py"], root, timeout=240
     )
+    mypy = quality_gate.resolve_tool("mypy", root)
+    mypy_tool = [mypy] if mypy else [sys.executable, "-m", "mypy"]
     mypy_code, mypy_output = _run(
-        [sys.executable, "-m", "mypy", "packages/contracts", "packages/agent-runtime"],
+        [*mypy_tool, "packages/contracts", "packages/agent-runtime"],
         root,
         timeout=300,
+        env=_build_mypy_env(root),
     )
     if lint_code != 0 or mypy_code != 0:
         return GateCheckResult(
@@ -209,6 +369,212 @@ def _check_quality(root: Path) -> GateCheckResult:
             f"ruff exit={lint_code} ({_tail(lint_output)}) | mypy exit={mypy_code} ({_tail(mypy_output)})",
         )
     return GateCheckResult("quality", True, "ruff check + mypy clean")
+
+
+def _check_phase2_structure(root: Path) -> list[GateCheckResult]:
+    """Verify the Phase-2 module/test home layout; absent paths are failures."""
+    return [
+        GateCheckResult("phase2_structure", (root / rel).exists(), f"present: {rel}")
+        for rel in PHASE2_PATHS
+    ]
+
+
+def _check_phase2_tests(root: Path) -> GateCheckResult:
+    code, output = _run(
+        [sys.executable, "-m", "pytest", *PHASE2_TEST_SUITES, "-q"], root, timeout=600
+    )
+    return GateCheckResult("phase2_tests", code == 0, f"exit={code}: {_tail(output)}")
+
+
+def _check_phase2_quality(root: Path) -> GateCheckResult:
+    ruff = quality_gate.resolve_tool("ruff", root)
+    if ruff is None:
+        return GateCheckResult("phase2_quality", False, "ruff executable not found")
+    lint_code, lint_output = _run(
+        [
+            ruff,
+            "check",
+            "packages/contracts",
+            "packages/behavior",
+            "tests/unit/test_models.py",
+            "tests/unit/test_evidence.py",
+            "tests/unit/test_versioning.py",
+            "tests/integration",
+        ],
+        root,
+        timeout=240,
+    )
+    mypy = quality_gate.resolve_tool("mypy", root)
+    mypy_tool = [mypy] if mypy else [sys.executable, "-m", "mypy"]
+    mypy_code, mypy_output = _run(
+        [*mypy_tool, *PHASE2_MYPY_TARGETS],
+        root,
+        timeout=300,
+        env=_build_mypy_env(root),
+    )
+    if lint_code != 0 or mypy_code != 0:
+        return GateCheckResult(
+            "phase2_quality",
+            False,
+            f"ruff exit={lint_code} ({_tail(lint_output)}) | mypy exit={mypy_code} ({_tail(mypy_output)})",
+        )
+    return GateCheckResult("phase2_quality", True, "ruff check + mypy clean")
+
+
+def _check_phase3_structure(root: Path) -> list[GateCheckResult]:
+    """Verify the Phase-3 module/test home layout; absent paths are failures."""
+    return [
+        GateCheckResult("phase3_structure", (root / rel).exists(), f"present: {rel}")
+        for rel in PHASE3_PATHS
+    ]
+
+
+def _check_phase4_structure(root: Path) -> list[GateCheckResult]:
+    """Verify the Phase-4 module/test home layout; absent paths are failures."""
+    return [
+        GateCheckResult("phase4_structure", (root / rel).exists(), f"present: {rel}")
+        for rel in PHASE4_PATHS
+    ]
+
+
+def _check_phase3_tests(root: Path) -> GateCheckResult:
+    code, output = _run(
+        [sys.executable, "-m", "pytest", *PHASE3_TEST_SUITES, "-q"],
+        root,
+        timeout=600,
+    )
+    return GateCheckResult("phase3_tests", code == 0, f"exit={code}: {_tail(output)}")
+
+
+def _check_phase4_tests(root: Path) -> GateCheckResult:
+    code, output = _run(
+        [sys.executable, "-m", "pytest", *PHASE4_TEST_SUITES, "-q"],
+        root,
+        timeout=600,
+    )
+    return GateCheckResult("phase4_tests", code == 0, f"exit={code}: {_tail(output)}")
+
+
+def _check_quality_for(
+    root: Path,
+    *,
+    ruff_targets: Sequence[str],
+    mypy_targets: Sequence[str],
+    name: str = "quality",
+) -> GateCheckResult:
+    """Parameterized phase quality gate: ruff check+format plus mypy.
+
+    mypy runs with ``MYPYPATH`` so every phase gate type-checks correctly even
+    when the packages are not pip-installed.
+    """
+    ruff = quality_gate.resolve_tool("ruff", root)
+    if ruff is None:
+        return GateCheckResult(name, False, "ruff executable not found")
+    lint_code, lint_output = _run([ruff, "check", *ruff_targets], root, timeout=240)
+    format_code, format_output = _run(
+        [ruff, "format", "--check", *ruff_targets], root, timeout=240
+    )
+    mypy = quality_gate.resolve_tool("mypy", root)
+    mypy_tool = [mypy] if mypy else [sys.executable, "-m", "mypy"]
+    mypy_code, mypy_output = _run(
+        [*mypy_tool, *mypy_targets],
+        root,
+        timeout=300,
+        env=_build_mypy_env(root),
+    )
+    if lint_code != 0 or format_code != 0 or mypy_code != 0:
+        return GateCheckResult(
+            name,
+            False,
+            f"ruff exit={lint_code} ({_tail(lint_output)}) | "
+            f"ruff-format exit={format_code} ({_tail(format_output)}) | "
+            f"mypy exit={mypy_code} ({_tail(mypy_output)})",
+        )
+    return GateCheckResult(name, True, "ruff check + format + mypy clean")
+
+
+def _check_phase3_quality(root: Path) -> GateCheckResult:
+    ruff_targets = ("packages/agent-runtime", *PHASE3_TEST_SUITES)
+    return _check_quality_for(
+        root,
+        ruff_targets=ruff_targets,
+        mypy_targets=PHASE3_MYPY_TARGETS,
+        name="phase3_quality",
+    )
+
+
+def _check_phase4_quality(root: Path) -> GateCheckResult:
+    ruff_targets = ("packages/tools", *PHASE4_TEST_SUITES)
+    return _check_quality_for(
+        root,
+        ruff_targets=ruff_targets,
+        mypy_targets=PHASE4_MYPY_TARGETS,
+        name="phase4_quality",
+    )
+
+
+def _check_phase3_imports(root: Path) -> GateCheckResult:
+    """Verify the Phase-3 runtime surface imports (in-process)."""
+    del root
+    try:
+        required = {
+            "smorx_runtime.orchestrator": "Orchestrator",
+            "smorx_runtime.graph": "TaskGraph",
+            "smorx_runtime.waves": "ParallelWaveEngine",
+            "smorx_runtime.toolgate": "CapabilityGateway",
+        }
+        missing: list[str] = []
+        for module_name, attr in required.items():
+            module = importlib.import_module(module_name)
+            if not hasattr(module, attr):
+                missing.append(f"{module_name}.{attr}")
+        if missing:
+            return GateCheckResult(
+                "phase3_imports", False, "missing symbols: " + ", ".join(missing)
+            )
+    except Exception as exc:  # noqa: BLE001 - gate must capture any import failure
+        return GateCheckResult("phase3_imports", False, f"import failed: {exc}")
+    return GateCheckResult(
+        "phase3_imports", True, "orchestrator/graph/waves/toolgate symbols importable"
+    )
+
+
+def _check_phase4_imports(root: Path) -> GateCheckResult:
+    """Verify ``ControlPlane`` satisfies ``CapabilityGateway`` (in-process).
+
+    Constructs a real ``ControlPlane`` with the documented constructor kwargs
+    (registry/engine/audit) — no sandbox, no network, no host mutation.
+    """
+    del root
+    try:
+        from smorx_runtime.toolgate import CapabilityGateway
+        from smorx_tools.audit import AuditTrail
+        from smorx_tools.control import ControlPlane
+        from smorx_tools.policies import PolicyEngine
+        from smorx_tools.tool import ToolRegistry
+    except ImportError as exc:
+        return GateCheckResult("phase4_imports", False, f"import failed: {exc}")
+    try:
+        plane = ControlPlane(
+            registry=ToolRegistry(),
+            engine=PolicyEngine(),
+            audit=AuditTrail(),
+        )
+        if not isinstance(plane, CapabilityGateway):
+            return GateCheckResult(
+                "phase4_imports",
+                False,
+                "ControlPlane does not satisfy smorx_runtime.toolgate.CapabilityGateway",
+            )
+    except Exception as exc:  # noqa: BLE001 - gate must capture any construct failure
+        return GateCheckResult(
+            "phase4_imports", False, f"ControlPlane construction failed: {exc}"
+        )
+    return GateCheckResult(
+        "phase4_imports",
+        True,
+        "ControlPlane(registry, engine, audit) satisfies CapabilityGateway",
+    )
 
 
 def _check_env() -> GateCheckResult:
@@ -280,6 +646,14 @@ def _check_health(root: Path, *, live: bool) -> GateCheckResult:
     )
 
 
+def _ensure_src_paths(root: Path) -> None:
+    """Make the src packages importable for in-process contract/model checks."""
+    for rel in _SRC_PATHS:
+        candidate = str((root / rel).resolve())
+        if candidate not in sys.path:
+            sys.path.insert(0, candidate)
+
+
 def evaluate_phase0(root: Path | None = None, *, live: bool = False) -> PhaseGateResult:
     """Evaluate the full Phase-0 exit gate.
 
@@ -289,6 +663,7 @@ def evaluate_phase0(root: Path | None = None, *, live: bool = False) -> PhaseGat
     """
     started_at = _utc_now()
     base = root.resolve() if root is not None else _repo_root()
+    _ensure_src_paths(base)
     checks = list(structure_checks(base))
     checks.append(_check_contracts())
     checks.append(_check_state_machine_tests(base))
@@ -301,8 +676,73 @@ def evaluate_phase0(root: Path | None = None, *, live: bool = False) -> PhaseGat
     return result
 
 
+def evaluate_phase2(root: Path | None = None, *, live: bool = False) -> PhaseGateResult:
+    """Evaluate the Phase-2 exit gate (behavioral data model & persistence).
+
+    Args:
+        root: Repository root to evaluate. Defaults to the git root.
+        live: Accepted for CLI symmetry; unused in Phase 2 (no API surface).
+    """
+    started_at = _utc_now()
+    base = root.resolve() if root is not None else _repo_root()
+    _ensure_src_paths(base)
+    checks = []
+    checks.extend(_check_phase2_structure(base))
+    checks.append(_check_contracts())
+    checks.append(_check_phase2_tests(base))
+    checks.append(_check_phase2_quality(base))
+    checks.append(_check_env())
+    result = finalize_phase2(checks, started_at=started_at)
+    result.phase = "2"
+    return result
+
+
+def evaluate_phase3(root: Path | None = None, *, live: bool = False) -> PhaseGateResult:
+    """Evaluate the Phase-3 exit gate (orchestrator runtime).
+
+    Args:
+        root: Repository root to evaluate. Defaults to the git root.
+        live: Accepted for CLI symmetry; unused in Phase 3 (no API surface).
+    """
+    started_at = _utc_now()
+    base = root.resolve() if root is not None else _repo_root()
+    _ensure_src_paths(base)
+    checks = []
+    checks.extend(_check_phase3_structure(base))
+    checks.append(_check_contracts())
+    checks.append(_check_phase3_imports(base))
+    checks.append(_check_phase3_tests(base))
+    checks.append(_check_phase3_quality(base))
+    checks.append(_check_env())
+    result = finalize_phase3(checks, started_at=started_at)
+    result.phase = "3"
+    return result
+
+
+def evaluate_phase4(root: Path | None = None, *, live: bool = False) -> PhaseGateResult:
+    """Evaluate the Phase-4 exit gate (tool/control plane).
+
+    Args:
+        root: Repository root to evaluate. Defaults to the git root.
+        live: Accepted for CLI symmetry; unused in Phase 4 (no API surface).
+    """
+    started_at = _utc_now()
+    base = root.resolve() if root is not None else _repo_root()
+    _ensure_src_paths(base)
+    checks = []
+    checks.extend(_check_phase4_structure(base))
+    checks.append(_check_contracts())
+    checks.append(_check_phase4_imports(base))
+    checks.append(_check_phase4_tests(base))
+    checks.append(_check_phase4_quality(base))
+    checks.append(_check_env())
+    result = finalize_phase4(checks, started_at=started_at)
+    result.phase = "4"
+    return result
+
+
 def _print_result(result: PhaseGateResult) -> None:
-    print("PHASE 0 EXIT GATE")
+    print(f"PHASE {result.phase} EXIT GATE")
     for check in result.checks:
         state = "PASS" if check.passed else "FAIL"
         print(f"  {state:5s} {check.name}: {check.detail}")
@@ -312,19 +752,35 @@ def _print_result(result: PhaseGateResult) -> None:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Evaluate the Phase-0 exit gate.")
+    parser = argparse.ArgumentParser(
+        description="Evaluate a phase exit gate (0, 2, 3, or 4)."
+    )
+    parser.add_argument(
+        "--phase",
+        type=str,
+        choices=("0", "2", "3", "4"),
+        default="0",
+        help="phase gate to evaluate (default: 0)",
+    )
     parser.add_argument(
         "--live", action="store_true", help="also boot the API and probe /health"
     )
     parser.add_argument("--json", action="store_true", help="emit JSON result")
     args = parser.parse_args(argv)
 
-    result = evaluate_phase0(live=args.live)
+    if args.phase == "2":
+        result = evaluate_phase2(live=args.live)
+    elif args.phase == "3":
+        result = evaluate_phase3(live=args.live)
+    elif args.phase == "4":
+        result = evaluate_phase4(live=args.live)
+    else:
+        result = evaluate_phase0(live=args.live)
     if args.json:
         print(json.dumps(asdict(result), indent=2))
     else:
         _print_result(result)
-    return 0 if result.status == "PHASE_0_PASS" else 1
+    return 0 if result.status.endswith("_PASS") else 1
 
 
 if __name__ == "__main__":

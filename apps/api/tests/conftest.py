@@ -33,6 +33,7 @@ def _now() -> datetime:
 @pytest.fixture(autouse=True)
 def _clean_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     get_settings.cache_clear()
+    Settings.model_config["env_file"] = None
     for env_name in list(os.environ):
         if env_name.upper().startswith(("NEBIUS_", "CONTREE_")):
             monkeypatch.delenv(env_name, raising=False)

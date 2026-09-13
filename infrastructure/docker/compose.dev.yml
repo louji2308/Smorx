@@ -1,0 +1,42 @@
+# =============================================================================
+# smorx-dev - local development services for the Software Evolution
+# Intelligence System.
+#
+# CURRENT SCOPE:
+#   A single PostgreSQL 16 service that mirrors the Supabase Postgres setup
+#   referenced in Tech-stack.md. This service is NOT wired to apps/api or
+#   apps/web yet; it exists so a local Postgres counterpart is ready before
+#   persistence integration begins.
+#
+# SECURITY:
+#   No secrets are committed. All values come from environment interpolation
+#   with documented local defaults. Override in a local `.env` next to this
+#   file or in your shell. Do not commit real credentials here.
+#
+# RUN:
+#   docker compose -f infrastructure/docker/compose.dev.yml up -d
+#   docker compose -f infrastructure/docker/compose.dev.yml down
+# =============================================================================
+
+name: smorx-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-smorx}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smorx}
+      POSTGRES_DB: ${POSTGRES_DB:-smorx}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:

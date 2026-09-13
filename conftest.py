@@ -2,8 +2,8 @@
 
 Defensively places the parallel-package src trees and the governance scripts
 on ``sys.path`` so root-level test runs can import ``smorx_contracts``,
-``smorx_runtime``, ``smorx_behavior``, and the ``scripts`` modules
-(``env_check``, ``phase_gate``) without a prior ``pip install``.
+``smorx_runtime``, ``smorx_behavior``, ``smorx_tools``, and the ``scripts``
+modules (``env_check``, ``phase_gate``) without a prior ``pip install``.
 
 This module never imports any project package at collection time; it only
 mutates ``sys.path``. Individual tests must import the packages lazily inside
@@ -21,6 +21,7 @@ _PYTHON_PATH_ENTRIES = (
     _ROOT / "packages" / "contracts" / "src",
     _ROOT / "packages" / "agent-runtime" / "src",
     _ROOT / "packages" / "behavior" / "src",
+    _ROOT / "packages" / "tools" / "src",
     _ROOT / "scripts",
 )
 

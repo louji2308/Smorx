@@ -1,0 +1,46 @@
+{
+  "_comment": "REFERENCE ONLY - not provisioned; requires credentials and validated API shapes (see infrastructure/nebius/README.md).",
+  "api_version": "v1",
+  "provider": "nebius-token-factory-sandbox",
+  "client": {
+    "endpoint": "<ENDPOINT_URL>",
+    "project_id_from_env": "NEBIUS_AI_PROJECT",
+    "api_key_from_env": "NEBIUS_API_KEY"
+  },
+  "sandbox": {
+    "name": "smorx-execution-sandbox",
+    "image": "<IMAGE_REF>",
+    "capabilities": [
+      "EXECUTE",
+      "CHECKPOINT",
+      "ROLLBACK",
+      "ARTIFACTS",
+      "NETWORK"
+    ],
+    "limits": {
+      "cpu": "<CPU_LIMIT>",
+      "memory": "<MEMORY_LIMIT>",
+      "timeout_seconds": 60
+    }
+  },
+  "lifecycle": {
+    "create": {
+      "request_id": "<REQUEST_ID>",
+      "image": "<IMAGE_REF>"
+    },
+    "execute": {
+      "command": [
+        "<COMMAND>",
+        "<ARG>"
+      ],
+      "timeout_seconds": 30
+    },
+    "checkpoint": {
+      "label": "<CHECKPOINT_LABEL>"
+    },
+    "rollback": {
+      "checkpoint_ref": "<CHECKPOINT_ID>"
+    },
+    "destroy": {}
+  }
+}

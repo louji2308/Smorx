@@ -23,14 +23,8 @@ from sqlalchemy import JSON, Boolean, Float, ForeignKey, Integer, String, Text, 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from smorx_behavior.db.base import Base
-from smorx_behavior.db.mixins import TimestampMixin
+from smorx_behavior.db.mixins import TimestampMixin, UUIDPkMixin
 from smorx_behavior.db.types import UTCDateTime
-
-try:  # pragma: no cover - contract name; falls back to current db module name
-    from smorx_behavior.db.mixins import UUIDPrimaryKeyMixin
-except ImportError:  # pragma: no cover
-    from smorx_behavior.db.mixins import UUIDPkMixin as UUIDPrimaryKeyMixin
-
 from smorx_behavior.models.enums import (
     AgentState,
     CertificateStatus,
@@ -105,7 +99,7 @@ class ImmutableObjectMixin:
     )
 
 
-class Project(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Project(UUIDPkMixin, TimestampMixin, Base):
     """Root aggregate for a governed software-evolution project."""
 
     __tablename__ = "projects"
@@ -123,14 +117,12 @@ class Project(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     memory_updates: Mapped[list[MemoryUpdate]] = relationship(back_populates="project")
 
 
-class Repository(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Repository(UUIDPkMixin, TimestampMixin, Base):
     """A version-controlled repository the system inspects and evolves."""
 
     __tablename__ = "repositories"
 
-    project_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("projects.id"), nullable=False
-    )
+    project_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("projects.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     url: Mapped[str | None] = mapped_column(String(500))
     default_branch: Mapped[str] = mapped_column(String(255), default="main", nullable=False)
@@ -148,7 +140,7 @@ class Repository(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     ghosts: Mapped[list[Ghost]] = relationship(back_populates="repository")
 
 
-class Change(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Change(UUIDPkMixin, TimestampMixin, Base):
     """A concrete proposed or committed change to a repository."""
 
     __tablename__ = "changes"
@@ -175,7 +167,7 @@ class Change(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     intent_alignments: Mapped[list[IntentAlignment]] = relationship(back_populates="change")
 
 
-class Task(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Task(UUIDPkMixin, TimestampMixin, Base):
     """A unit of engineering work issued against a repository."""
 
     __tablename__ = "tasks"
@@ -188,9 +180,7 @@ class Task(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     status: Mapped[str] = mapped_column(
         String(40), default=TaskStatus.CREATED.value, nullable=False
     )
-    priority: Mapped[str] = mapped_column(
-        String(20), default=Priority.NORMAL.value, nullable=False
-    )
+    priority: Mapped[str] = mapped_column(String(20), default=Priority.NORMAL.value, nullable=False)
     requested_by: Mapped[str | None] = mapped_column(String(120))
     acceptance_criteria: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
@@ -215,16 +205,14 @@ class Task(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     consequential_events: Mapped[list[ConsequentialEvent]] = relationship(back_populates="task")
 
 
-class Run(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Run(UUIDPkMixin, TimestampMixin, Base):
     """A single execution attempt for a task."""
 
     __tablename__ = "runs"
 
     task_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tasks.id"), nullable=False)
     kind: Mapped[str] = mapped_column(String(40), default="AGENT", nullable=False)
-    status: Mapped[str] = mapped_column(
-        String(40), default=RunStatus.QUEUED.value, nullable=False
-    )
+    status: Mapped[str] = mapped_column(String(40), default=RunStatus.QUEUED.value, nullable=False)
     summary: Mapped[str | None] = mapped_column(Text)
     started_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
     finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
@@ -238,7 +226,7 @@ class Run(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     consequential_events: Mapped[list[ConsequentialEvent]] = relationship(back_populates="run")
 
 
-class AgentRun(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AgentRun(UUIDPkMixin, TimestampMixin, Base):
     """The reasoning loop of an orchestrator or specialist agent."""
 
     __tablename__ = "agent_runs"
@@ -247,12 +235,8 @@ class AgentRun(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     role: Mapped[str] = mapped_column(String(60), default="ORCHESTRATOR", nullable=False)
     model: Mapped[str | None] = mapped_column(String(120))
     provider: Mapped[str | None] = mapped_column(String(60))
-    status: Mapped[str] = mapped_column(
-        String(40), default=RunStatus.QUEUED.value, nullable=False
-    )
-    state: Mapped[str] = mapped_column(
-        String(40), default=AgentState.CREATED.value, nullable=False
-    )
+    status: Mapped[str] = mapped_column(String(40), default=RunStatus.QUEUED.value, nullable=False)
+    state: Mapped[str] = mapped_column(String(40), default=AgentState.CREATED.value, nullable=False)
     iterations: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     max_iterations: Mapped[int] = mapped_column(Integer, default=8, nullable=False)
     duration_ms: Mapped[int | None] = mapped_column(Integer)
@@ -266,7 +250,7 @@ class AgentRun(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     candidate_patches: Mapped[list[CandidatePatch]] = relationship(back_populates="agent_run")
 
 
-class SubagentRun(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SubagentRun(UUIDPkMixin, TimestampMixin, Base):
     """A bounded, contract-driven delegation performed by a specialist."""
 
     __tablename__ = "subagent_runs"
@@ -276,9 +260,7 @@ class SubagentRun(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     responsibility: Mapped[str | None] = mapped_column(Text)
-    status: Mapped[str] = mapped_column(
-        String(40), default=RunStatus.QUEUED.value, nullable=False
-    )
+    status: Mapped[str] = mapped_column(String(40), default=RunStatus.QUEUED.value, nullable=False)
     inputs: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
     outputs: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
     confidence: Mapped[float | None] = mapped_column(Float)
@@ -290,7 +272,7 @@ class SubagentRun(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     evidence_items: Mapped[list[Evidence]] = relationship(back_populates="subagent_run")
 
 
-class Behavior(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Behavior(UUIDPkMixin, TimestampMixin, Base):
     """An observed, nameable behavior of the repository."""
 
     __tablename__ = "behaviors"
@@ -315,7 +297,7 @@ class Behavior(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     behavioral_deltas: Mapped[list[BehavioralDelta]] = relationship(back_populates="behavior")
 
 
-class Invariant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Invariant(UUIDPkMixin, TimestampMixin, Base):
     """A property that must remain true across the repository's evolution."""
 
     __tablename__ = "invariants"
@@ -326,20 +308,16 @@ class Invariant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     statement: Mapped[str] = mapped_column(Text, nullable=False)
-    severity: Mapped[str] = mapped_column(
-        String(20), default=Severity.MEDIUM.value, nullable=False
-    )
+    severity: Mapped[str] = mapped_column(String(20), default=Severity.MEDIUM.value, nullable=False)
     enforced_by: Mapped[str | None] = mapped_column(String(200))
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     locked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     behavior: Mapped[Behavior | None] = relationship(back_populates="invariants")
-    constitution_claim: Mapped[ConstitutionClaim | None] = relationship(
-        back_populates="invariants"
-    )
+    constitution_claim: Mapped[ConstitutionClaim | None] = relationship(back_populates="invariants")
 
 
-class Incident(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Incident(UUIDPkMixin, TimestampMixin, Base):
     """A real historical failure or degradation of repository behavior."""
 
     __tablename__ = "incidents"
@@ -351,9 +329,7 @@ class Incident(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     evidence_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("evidence.id"))
     title: Mapped[str] = mapped_column(String(400), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
-    severity: Mapped[str] = mapped_column(
-        String(20), default=Severity.MEDIUM.value, nullable=False
-    )
+    severity: Mapped[str] = mapped_column(String(20), default=Severity.MEDIUM.value, nullable=False)
     status: Mapped[str] = mapped_column(String(40), default="OPEN", nullable=False)
     detected_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
 
@@ -362,7 +338,7 @@ class Incident(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     evidence: Mapped[Evidence | None] = relationship()
 
 
-class Dependency(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Dependency(UUIDPkMixin, TimestampMixin, Base):
     """A package or service the repository depends on."""
 
     __tablename__ = "dependencies"
@@ -375,16 +351,14 @@ class Dependency(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     version_spec: Mapped[str | None] = mapped_column(String(120))
     ecosystem: Mapped[str | None] = mapped_column(String(60))
     source: Mapped[str | None] = mapped_column(String(200))
-    risk_level: Mapped[str] = mapped_column(
-        String(20), default=Severity.LOW.value, nullable=False
-    )
+    risk_level: Mapped[str] = mapped_column(String(20), default=Severity.LOW.value, nullable=False)
     is_transitive: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     meta: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
 
     repository: Mapped[Repository] = relationship(back_populates="dependencies")
 
 
-class RiskZone(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class RiskZone(UUIDPkMixin, TimestampMixin, Base):
     """A region of the repository with elevated change risk."""
 
     __tablename__ = "risk_zones"
@@ -394,16 +368,14 @@ class RiskZone(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     path_pattern: Mapped[str] = mapped_column(String(400), nullable=False)
     reason: Mapped[str | None] = mapped_column(Text)
-    severity: Mapped[str] = mapped_column(
-        String(20), default=Severity.MEDIUM.value, nullable=False
-    )
+    severity: Mapped[str] = mapped_column(String(20), default=Severity.MEDIUM.value, nullable=False)
     score: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     meta: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
 
     repository: Mapped[Repository] = relationship(back_populates="risk_zones")
 
 
-class Ghost(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Ghost(UUIDPkMixin, TimestampMixin, Base):
     """A hypothetical replay of a historical change against current behavior."""
 
     __tablename__ = "ghosts"
@@ -425,7 +397,7 @@ class Ghost(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     source_change: Mapped[Change | None] = relationship()
 
 
-class Evidence(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Evidence(UUIDPkMixin, TimestampMixin, Base):
     """A single, attributable observation supporting a claim (2.2).
 
     ``id`` is the stable identity, ``hash`` the unique SHA-256 hex digest of
@@ -438,9 +410,7 @@ class Evidence(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     task_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("tasks.id"))
     run_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("runs.id"))
     agent_run_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("agent_runs.id"))
-    subagent_run_id: Mapped[uuid.UUID | None] = mapped_column(
-        Uuid, ForeignKey("subagent_runs.id")
-    )
+    subagent_run_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("subagent_runs.id"))
     execution_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("executions.id"))
     claim_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("claims.id"))
     verification_case_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -467,7 +437,7 @@ class Evidence(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
 
 
-class Claim(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Claim(UUIDPkMixin, TimestampMixin, Base):
     """An evidence-bound assertion about the system's behavior."""
 
     __tablename__ = "claims"
@@ -475,9 +445,7 @@ class Claim(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     task_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("tasks.id"))
     statement: Mapped[str] = mapped_column(Text, nullable=False)
     kind: Mapped[str] = mapped_column(String(60), default="BEHAVIORAL", nullable=False)
-    status: Mapped[str] = mapped_column(
-        String(40), default=ClaimStatus.OPEN.value, nullable=False
-    )
+    status: Mapped[str] = mapped_column(String(40), default=ClaimStatus.OPEN.value, nullable=False)
     confidence: Mapped[float | None] = mapped_column(Float)
     owner_type: Mapped[str] = mapped_column(String(60), default="CERTIFICATE", nullable=False)
     owner_id: Mapped[uuid.UUID | None] = mapped_column(Uuid)
@@ -491,7 +459,7 @@ class Claim(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     intent_alignments: Mapped[list[IntentAlignment]] = relationship(back_populates="claim")
 
 
-class Constitution(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Constitution(UUIDPkMixin, TimestampMixin, Base):
     """The behavioral constitution: the governance source of truth (2.3)."""
 
     __tablename__ = "constitutions"
@@ -502,9 +470,7 @@ class Constitution(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     status: Mapped[str] = mapped_column(
         String(40), default=ConstitutionStatus.DRAFT.value, nullable=False
     )
-    owner_scope: Mapped[str] = mapped_column(
-        String(60), default="GOVERNANCE", nullable=False
-    )
+    owner_scope: Mapped[str] = mapped_column(String(60), default="GOVERNANCE", nullable=False)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     locked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     ratified_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
@@ -515,7 +481,7 @@ class Constitution(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
 
 
-class ConstitutionClaim(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ConstitutionClaim(UUIDPkMixin, TimestampMixin, Base):
     """A single governance rule owned by a constitution."""
 
     __tablename__ = "constitution_claims"
@@ -525,9 +491,7 @@ class ConstitutionClaim(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     category: Mapped[str] = mapped_column(String(60), default="GOVERNANCE", nullable=False)
     rule: Mapped[str] = mapped_column(Text, nullable=False)
-    severity: Mapped[str] = mapped_column(
-        String(20), default=Severity.MEDIUM.value, nullable=False
-    )
+    severity: Mapped[str] = mapped_column(String(20), default=Severity.MEDIUM.value, nullable=False)
     position: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     locked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -536,7 +500,7 @@ class ConstitutionClaim(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     invariants: Mapped[list[Invariant]] = relationship(back_populates="constitution_claim")
 
 
-class IntentLedger(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class IntentLedger(UUIDPkMixin, TimestampMixin, Base):
     """The user-intent source of truth for a task or project (2.3)."""
 
     __tablename__ = "intent_ledgers"
@@ -548,9 +512,7 @@ class IntentLedger(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     status: Mapped[str] = mapped_column(
         String(40), default=IntentStatus.DRAFT.value, nullable=False
     )
-    owner_scope: Mapped[str] = mapped_column(
-        String(60), default="USER_INTENT", nullable=False
-    )
+    owner_scope: Mapped[str] = mapped_column(String(60), default="USER_INTENT", nullable=False)
     created_by: Mapped[str | None] = mapped_column(String(120))
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     locked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -560,7 +522,7 @@ class IntentLedger(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     intent_items: Mapped[list[IntentItem]] = relationship(back_populates="intent_ledger")
 
 
-class IntentItem(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class IntentItem(UUIDPkMixin, TimestampMixin, Base):
     """A single authorized requirement or constraint owned by a ledger."""
 
     __tablename__ = "intent_items"
@@ -573,9 +535,7 @@ class IntentItem(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     kind: Mapped[str] = mapped_column(
         String(60), default=IntentKind.REQUIREMENT.value, nullable=False
     )
-    priority: Mapped[str] = mapped_column(
-        String(20), default=Priority.NORMAL.value, nullable=False
-    )
+    priority: Mapped[str] = mapped_column(String(20), default=Priority.NORMAL.value, nullable=False)
     status: Mapped[str] = mapped_column(
         String(40), default=IntentStatus.PENDING.value, nullable=False
     )
@@ -584,12 +544,10 @@ class IntentItem(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     intent_ledger: Mapped[IntentLedger] = relationship(back_populates="intent_items")
     task: Mapped[Task | None] = relationship(back_populates="intent_items")
-    intent_alignments: Mapped[list[IntentAlignment]] = relationship(
-        back_populates="intent_item"
-    )
+    intent_alignments: Mapped[list[IntentAlignment]] = relationship(back_populates="intent_item")
 
 
-class SemanticImpact(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SemanticImpact(UUIDPkMixin, TimestampMixin, Base):
     """The semantic-impact map owning predicted impact (2.3)."""
 
     __tablename__ = "semantic_impacts"
@@ -611,7 +569,7 @@ class SemanticImpact(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     intent_item: Mapped[IntentItem | None] = relationship()
 
 
-class VerificationPlan(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class VerificationPlan(UUIDPkMixin, TimestampMixin, Base):
     """The verification contract owning the independent investigation (2.3)."""
 
     __tablename__ = "verification_plans"
@@ -641,7 +599,7 @@ class VerificationPlan(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     certificates: Mapped[list[Certificate]] = relationship(back_populates="verification_plan")
 
 
-class VerificationCase(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class VerificationCase(UUIDPkMixin, TimestampMixin, Base):
     """An independent verification experiment inside a verification plan."""
 
     __tablename__ = "verification_cases"
@@ -666,15 +624,13 @@ class VerificationCase(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     locked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    verification_plan: Mapped[VerificationPlan] = relationship(
-        back_populates="verification_cases"
-    )
+    verification_plan: Mapped[VerificationPlan] = relationship(back_populates="verification_cases")
     change: Mapped[Change | None] = relationship()
     executions: Mapped[list[Execution]] = relationship(back_populates="verification_case")
     evidence_items: Mapped[list[Evidence]] = relationship(back_populates="verification_case")
 
 
-class CandidatePatch(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class CandidatePatch(UUIDPkMixin, TimestampMixin, Base):
     """A candidate development output produced by the coding agent (2.3)."""
 
     __tablename__ = "candidate_patches"
@@ -704,7 +660,7 @@ class CandidatePatch(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     repair_packages: Mapped[list[RepairPackage]] = relationship(back_populates="candidate_patch")
 
 
-class Execution(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Execution(UUIDPkMixin, TimestampMixin, Base):
     """A machine-authoritative sandbox execution and its raw result."""
 
     __tablename__ = "executions"
@@ -737,17 +693,13 @@ class Execution(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     run: Mapped[Run] = relationship(back_populates="executions")
     agent_run: Mapped[AgentRun | None] = relationship(back_populates="executions")
     change: Mapped[Change | None] = relationship(back_populates="executions")
-    candidate_patch: Mapped[CandidatePatch | None] = relationship(
-        back_populates="executions"
-    )
-    verification_case: Mapped[VerificationCase | None] = relationship(
-        back_populates="executions"
-    )
+    candidate_patch: Mapped[CandidatePatch | None] = relationship(back_populates="executions")
+    verification_case: Mapped[VerificationCase | None] = relationship(back_populates="executions")
     evidence_items: Mapped[list[Evidence]] = relationship(back_populates="execution")
     failures: Mapped[list[Failure]] = relationship(back_populates="execution")
 
 
-class Failure(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Failure(UUIDPkMixin, TimestampMixin, Base):
     """A classified, preserved failure that drives the next decision (I4)."""
 
     __tablename__ = "failures"
@@ -765,9 +717,7 @@ class Failure(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     message: Mapped[str] = mapped_column(Text, nullable=False)
     probable_cause: Mapped[str | None] = mapped_column(Text)
     next_action: Mapped[str | None] = mapped_column(Text)
-    severity: Mapped[str] = mapped_column(
-        String(20), default=Severity.MEDIUM.value, nullable=False
-    )
+    severity: Mapped[str] = mapped_column(String(20), default=Severity.MEDIUM.value, nullable=False)
     iteration: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     resolved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     occurred_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
@@ -775,14 +725,12 @@ class Failure(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     execution: Mapped[Execution | None] = relationship(back_populates="failures")
     task: Mapped[Task | None] = relationship(back_populates="failures")
     run: Mapped[Run | None] = relationship(back_populates="failures")
-    candidate_patch: Mapped[CandidatePatch | None] = relationship(
-        back_populates="failures"
-    )
+    candidate_patch: Mapped[CandidatePatch | None] = relationship(back_populates="failures")
     evidence: Mapped[Evidence | None] = relationship()
     repair_packages: Mapped[list[RepairPackage]] = relationship(back_populates="failure")
 
 
-class BehavioralDelta(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class BehavioralDelta(UUIDPkMixin, TimestampMixin, Base):
     """The observed behavioral difference owning what actually changed (2.3)."""
 
     __tablename__ = "behavioral_deltas"
@@ -821,7 +769,7 @@ class BehavioralDelta(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
 
 
-class IntentAlignment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class IntentAlignment(UUIDPkMixin, TimestampMixin, Base):
     """Authorization verdict: was the observed change permitted? (section 18)."""
 
     __tablename__ = "intent_alignments"
@@ -848,12 +796,10 @@ class IntentAlignment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     claim: Mapped[Claim | None] = relationship(back_populates="intent_alignments")
     change: Mapped[Change | None] = relationship(back_populates="intent_alignments")
     evidence: Mapped[Evidence | None] = relationship()
-    certificates: Mapped[list[Certificate]] = relationship(
-        back_populates="intent_alignment"
-    )
+    certificates: Mapped[list[Certificate]] = relationship(back_populates="intent_alignment")
 
 
-class RepairPackage(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class RepairPackage(UUIDPkMixin, TimestampMixin, Base):
     """A bounded repair attempt generated in response to a failure."""
 
     __tablename__ = "repair_packages"
@@ -877,13 +823,11 @@ class RepairPackage(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     failure: Mapped[Failure | None] = relationship(back_populates="repair_packages")
     task: Mapped[Task | None] = relationship(back_populates="repair_packages")
-    candidate_patch: Mapped[CandidatePatch | None] = relationship(
-        back_populates="repair_packages"
-    )
+    candidate_patch: Mapped[CandidatePatch | None] = relationship(back_populates="repair_packages")
     evidence: Mapped[Evidence | None] = relationship()
 
 
-class Certificate(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Certificate(UUIDPkMixin, TimestampMixin, Base):
     """The certification owning proof bound to implementation and evidence (2.3)."""
 
     __tablename__ = "certificates"
@@ -901,9 +845,7 @@ class Certificate(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     status: Mapped[str] = mapped_column(
         String(40), default=CertificateStatus.DRAFT.value, nullable=False
     )
-    owner_scope: Mapped[str] = mapped_column(
-        String(60), default="CERTIFICATION", nullable=False
-    )
+    owner_scope: Mapped[str] = mapped_column(String(60), default="CERTIFICATION", nullable=False)
     signature: Mapped[str | None] = mapped_column(String(200))
     evidence_hash: Mapped[str | None] = mapped_column(String(64))
     payload: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
@@ -917,24 +859,18 @@ class Certificate(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     behavioral_deltas: Mapped[list[BehavioralDelta]] = relationship(
         back_populates="certificate", foreign_keys="[BehavioralDelta.certificate_id]"
     )
-    verification_plan: Mapped[VerificationPlan | None] = relationship(
-        back_populates="certificates"
-    )
-    intent_alignment: Mapped[IntentAlignment | None] = relationship(
-        back_populates="certificates"
-    )
+    verification_plan: Mapped[VerificationPlan | None] = relationship(back_populates="certificates")
+    intent_alignment: Mapped[IntentAlignment | None] = relationship(back_populates="certificates")
     memory_updates: Mapped[list[MemoryUpdate]] = relationship(back_populates="certificate")
 
 
-class MemoryUpdate(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class MemoryUpdate(UUIDPkMixin, TimestampMixin, Base):
     """A behavioral-memory entry closing the loop back into future tasks."""
 
     __tablename__ = "memory_updates"
 
     project_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("projects.id"), nullable=False)
-    certificate_id: Mapped[uuid.UUID | None] = mapped_column(
-        Uuid, ForeignKey("certificates.id")
-    )
+    certificate_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("certificates.id"))
     task_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("tasks.id"))
     evidence_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("evidence.id"))
     kind: Mapped[str] = mapped_column(
@@ -952,7 +888,7 @@ class MemoryUpdate(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     evidence: Mapped[Evidence | None] = relationship()
 
 
-class ConsequentialEvent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ConsequentialEvent(UUIDPkMixin, TimestampMixin, Base):
     """A2.4 event and trace model.
 
     Every consequential event becomes a structured, attributable row. The

@@ -1,0 +1,23 @@
+# REFERENCE ONLY - not provisioned; requires credentials and validated API
+# shapes (see infrastructure/nebius/README.md).
+api_version: v1
+kind: serverless-endpoint
+provider: nebius-token-factory
+client:
+  endpoint: <ENDPOINT_URL>
+  api_key_from_env: NEBIUS_API_KEY
+  project_id_from_env: NEBIUS_AI_PROJECT
+endpoint:
+  name: smorx-nemotron-router
+  model: <MODEL_REF>
+  routing:
+    tier_small: <SMALL_MODEL_REF>
+    tier_normal: <NORMAL_MODEL_REF>
+    tier_strong: <STRONG_MODEL_REF>
+  scaling:
+    min_instances: 0
+    max_instances: <MAX_INSTANCES>
+  auth:
+    api_key_from_env: NEBIUS_API_KEY
+status:
+  note: Not provisioned. Requires NEBIUS_API_KEY and NEBIUS_AI_PROJECT/NEBIUS_PROJECT_ID.

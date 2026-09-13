@@ -17,6 +17,11 @@ htmlcov/
 .coverage.*
 *.log
 
+# Generated databases
+*.db
+*.sqlite
+*.sqlite3
+
 # Virtual environments
 .venv/
 venv/

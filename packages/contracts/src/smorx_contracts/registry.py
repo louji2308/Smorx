@@ -305,11 +305,15 @@ class ContractRegistry:
     def _load_schema(self, name: str) -> dict[str, Any]:
         path = self._schema_dir / f"{name}.schema.json"
         try:
-            return json.loads(path.read_text(encoding="utf-8"))
+            raw = path.read_text(encoding="utf-8")
+            doc = json.loads(raw)
         except OSError as exc:  # pragma: no cover - guarded at construction
             raise ContractError(f"cannot read schema for {name!r}: {exc}") from exc
         except json.JSONDecodeError as exc:
             raise ContractError(f"invalid JSON in schema for {name!r}: {exc}") from exc
+        if not isinstance(doc, dict):
+            raise ContractError(f"schema for {name!r} must be a JSON object")
+        return doc
 
     def _model_for(self, name: str) -> type[VersionedModel]:
         try:
@@ -339,9 +343,7 @@ class ContractRegistry:
         try:
             validated = model.model_validate(dict(instance))
         except ValidationError as exc:
-            raise ContractValidationError(
-                f"contract {name!r} instance is invalid: {exc}"
-            ) from exc
+            raise ContractValidationError(f"contract {name!r} instance is invalid: {exc}") from exc
         self._check_cross_references(name, validated)
         return True
 
@@ -373,8 +375,7 @@ class ContractRegistry:
                     ExecutionResult.model_validate(execution_result.model_dump())
                 except ValidationError as exc:
                     raise ContractValidationError(
-                        "tool_invocation.execution_result is not a valid "
-                        f"execution_result: {exc}"
+                        f"tool_invocation.execution_result is not a valid execution_result: {exc}"
                     ) from exc
 
 
@@ -393,7 +394,5 @@ def sample_instance(name: str) -> dict[str, Any]:
     """Return a realistic minimal valid instance for a contract (deep copy)."""
     if name not in CONTRACT_NAMES:
         known = ", ".join(CONTRACT_NAMES)
-        raise UnknownContractError(
-            f"unknown contract {name!r}; expected one of: {known}"
-        )
+        raise UnknownContractError(f"unknown contract {name!r}; expected one of: {known}")
     return copy.deepcopy(SAMPLES[name])

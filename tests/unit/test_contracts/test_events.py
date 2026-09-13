@@ -86,7 +86,9 @@ def test_unknown_top_level_field_rejected() -> None:
     ],
 )
 def test_all_event_kinds_accepted(event_type: str) -> None:
-    event = ConsequentialEvent.model_validate({**CONFORMING_EVENT, "event_type": event_type})
+    event = ConsequentialEvent.model_validate(
+        {**CONFORMING_EVENT, "event_type": event_type}
+    )
     assert event.event_type == event_type
 
 

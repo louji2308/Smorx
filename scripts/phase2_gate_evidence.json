@@ -1,0 +1,106 @@
+﻿{
+  "phase": "2",
+  "status": "PHASE_2_PASS",
+  "checks": [
+    {
+      "name": "phase2_structure",
+      "passed": true,
+      "detail": "present: packages/behavior/src/smorx_behavior/db"
+    },
+    {
+      "name": "phase2_structure",
+      "passed": true,
+      "detail": "present: packages/behavior/src/smorx_behavior/models"
+    },
+    {
+      "name": "phase2_structure",
+      "passed": true,
+      "detail": "present: packages/behavior/src/smorx_behavior/evidence"
+    },
+    {
+      "name": "phase2_structure",
+      "passed": true,
+      "detail": "present: packages/behavior/src/smorx_behavior/versioning"
+    },
+    {
+      "name": "phase2_structure",
+      "passed": true,
+      "detail": "present: packages/behavior/src/smorx_behavior/repo"
+    },
+    {
+      "name": "phase2_structure",
+      "passed": true,
+      "detail": "present: packages/behavior/src/smorx_behavior/seed"
+    },
+    {
+      "name": "phase2_structure",
+      "passed": true,
+      "detail": "present: packages/behavior/migrations/versions"
+    },
+    {
+      "name": "phase2_structure",
+      "passed": true,
+      "detail": "present: packages/contracts/src/smorx_contracts"
+    },
+    {
+      "name": "phase2_structure",
+      "passed": true,
+      "detail": "present: tests/unit/test_models.py"
+    },
+    {
+      "name": "phase2_structure",
+      "passed": true,
+      "detail": "present: tests/unit/test_evidence.py"
+    },
+    {
+      "name": "phase2_structure",
+      "passed": true,
+      "detail": "present: tests/unit/test_versioning.py"
+    },
+    {
+      "name": "phase2_structure",
+      "passed": true,
+      "detail": "present: tests/integration/test_references.py"
+    },
+    {
+      "name": "phase2_structure",
+      "passed": true,
+      "detail": "present: tests/integration/test_certificate.py"
+    },
+    {
+      "name": "phase2_structure",
+      "passed": true,
+      "detail": "present: tests/integration/test_lifecycle.py"
+    },
+    {
+      "name": "contracts",
+      "passed": true,
+      "detail": "all 17 contracts validated"
+    },
+    {
+      "name": "phase2_tests",
+      "passed": true,
+      "detail": "exit=0:     force_set(session, certificate, version=0) | -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html"
+    },
+    {
+      "name": "phase2_quality",
+      "passed": true,
+      "detail": "ruff check + mypy clean"
+    },
+    {
+      "name": "env",
+      "passed": true,
+      "detail": "no required env issues"
+    }
+  ],
+  "failures": [],
+  "started_at": "2026-09-13T04:20:09+00:00",
+  "finished_at": "2026-09-13T04:20:22+00:00",
+  "evidence": {
+    "phase2_structure": "present: tests/integration/test_lifecycle.py",
+    "contracts": "all 17 contracts validated",
+    "phase2_tests": "exit=0:     force_set(session, certificate, version=0) | -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+    "phase2_quality": "ruff check + mypy clean",
+    "env": "no required env issues"
+  }
+}

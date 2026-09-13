@@ -28,6 +28,7 @@ from alembic import context
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+import smorx_behavior.models  # noqa: F401 - side-effect: register ORM tables on Base.metadata
 from smorx_behavior.db.base import Base
 from smorx_behavior.db.engine import create_sync_engine
 

@@ -90,6 +90,78 @@ def test_finalize_empty_checks_is_pass() -> None:
     assert result.failures == []
 
 
+def test_finalize_phase3_all_pass_is_pass() -> None:
+    checks = [
+        phase_gate.GateCheckResult("phase3_structure", True, "present"),
+        phase_gate.GateCheckResult("phase3_tests", True, "exit=0"),
+        phase_gate.GateCheckResult("phase3_quality", True, "ruff + mypy clean"),
+    ]
+
+    result = phase_gate.finalize_phase3(checks)
+
+    assert result.status == "PHASE_3_PASS"
+    assert result.failures == []
+    assert result.phase == "3"
+
+
+def test_finalize_phase3_any_failure_blocks() -> None:
+    checks = [
+        phase_gate.GateCheckResult("phase3_imports", True, "ok"),
+        phase_gate.GateCheckResult("phase3_tests", False, "exit=4: files missing"),
+    ]
+
+    result = phase_gate.finalize_phase3(checks)
+
+    assert result.status == "PHASE_3_BLOCKED"
+    assert result.failures == ["phase3_tests: exit=4: files missing"]
+
+
+def test_finalize_phase4_all_pass_is_pass() -> None:
+    checks = [
+        phase_gate.GateCheckResult("phase4_imports", True, "ControlPlane ok"),
+        phase_gate.GateCheckResult("phase4_tests", True, "exit=0"),
+    ]
+
+    result = phase_gate.finalize_phase4(checks)
+
+    assert result.status == "PHASE_4_PASS"
+    assert result.failures == []
+    assert result.phase == "4"
+
+
+def test_finalize_phase4_any_failure_blocks() -> None:
+    checks = [
+        phase_gate.GateCheckResult("phase4_quality", True, "clean"),
+        phase_gate.GateCheckResult(
+            "phase4_structure", False, "missing: packages/tools"
+        ),
+    ]
+
+    result = phase_gate.finalize_phase4(checks)
+
+    assert result.status == "PHASE_4_BLOCKED"
+    assert result.failures == ["phase4_structure: missing: packages/tools"]
+
+
+def test_evaluate_phase3_smoke_repo_root() -> None:
+    pytest.importorskip("smorx_runtime")
+
+    result = phase_gate.evaluate_phase3(root=phase_gate._repo_root(), live=False)
+
+    assert isinstance(result, phase_gate.PhaseGateResult)
+    assert result.status in ("PHASE_3_PASS", "PHASE_3_BLOCKED")
+
+
+def test_evaluate_phase4_smoke_repo_root() -> None:
+    pytest.importorskip("smorx_runtime")
+    pytest.importorskip("smorx_tools")
+
+    result = phase_gate.evaluate_phase4(root=phase_gate._repo_root(), live=False)
+
+    assert isinstance(result, phase_gate.PhaseGateResult)
+    assert result.status in ("PHASE_4_PASS", "PHASE_4_BLOCKED")
+
+
 def test_evaluate_phase0_smoke_with_contracts(tmp_path: Path) -> None:
     pytest.importorskip("smorx_contracts")
     _make_full_structure(tmp_path)
