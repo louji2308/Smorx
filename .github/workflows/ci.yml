@@ -1,0 +1,61 @@
+name: phase0
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  phase0:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install project packages and tooling
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e packages/contracts -e packages/agent-runtime
+          pip install ruff mypy pytest pytest-asyncio pydantic pydantic-settings
+
+      - name: Environment validation
+        shell: bash
+        run: python scripts/validate_env.py
+
+      - name: Lint
+        shell: bash
+        run: ruff check packages tests
+
+      - name: Format check
+        shell: bash
+        run: ruff format --check packages tests
+
+      - name: Type check
+        shell: bash
+        run: mypy packages/contracts packages/agent-runtime
+
+      - name: Unit tests
+        shell: bash
+        run: pytest tests/unit
+
+      - name: Build (python)
+        shell: bash
+        run: python -m compileall -q packages apps/api/app
+
+      - name: Secret scan
+        shell: bash
+        run: python scripts/scan_secrets.py
+
+      - name: Dependency audit
+        shell: bash
+        run: python scripts/audit_deps.py
+
+      - name: Phase 0 gate (offline)
+        shell: bash
+        run: python scripts/phase_gate.py
