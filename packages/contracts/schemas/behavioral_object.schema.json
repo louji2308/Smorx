@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "behavioral_object",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": [
+    "id", "version", "object_type", "name", "status", "created_at"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "object_type": {
+      "type": "string",
+      "enum": ["BEHAVIOR", "INVARIANT", "INCIDENT", "DEPENDENCY", "RISK_ZONE", "GHOST"]
+    },
+    "name": {"type": "string", "description": "Human-readable name, e.g. Ghost #221."},
+    "status": {
+      "type": "string",
+      "enum": ["OBSERVED", "ACTIVE", "RESOLVED", "MONITORED", "PROTECTED"]
+    },
+    "description": {"type": "string"},
+    "claim_ids": {"type": "array", "items": {"type": "string"}},
+    "repository": {"type": "string"},
+    "created_at": {"type": "string", "format": "date-time"}
+  }
+}

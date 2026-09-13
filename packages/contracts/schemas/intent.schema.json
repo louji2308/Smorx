@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "intent",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": [
+    "id", "version", "intent_type", "description", "change_id",
+    "status", "locked", "created_at"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "intent_type": {
+      "type": "string",
+      "enum": ["ADD", "REPLACE", "PRESERVE", "PERFORMANCE", "SECURITY"]
+    },
+    "description": {"type": "string"},
+    "change_id": {"type": "string"},
+    "status": {
+      "type": "string",
+      "enum": ["PROPOSED", "CONFIRMED", "LOCKED", "SUPERSEDED"]
+    },
+    "locked": {"type": "boolean"},
+    "created_at": {"type": "string", "format": "date-time"}
+  }
+}

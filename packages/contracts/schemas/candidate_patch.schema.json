@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "candidate_patch",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": [
+    "id", "version", "change_id", "candidate_number", "sandbox_id",
+    "commit", "status", "verification_plan_id", "applied_at"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "change_id": {"type": "string"},
+    "candidate_number": {"type": "integer", "minimum": 1},
+    "sandbox_id": {"type": "string"},
+    "commit": {"type": "string"},
+    "status": {
+      "type": "string",
+      "enum": ["CANDIDATE", "REPAIRING", "VERIFIED", "REJECTED", "CERTIFIED"]
+    },
+    "description": {"type": "string"},
+    "verification_plan_id": {"type": "string"},
+    "files": {"type": "array", "items": {"type": "string"}},
+    "applied_at": {"type": "string", "format": "date-time"}
+  }
+}

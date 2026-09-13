@@ -1,0 +1,1 @@
+"""Unit tests for the ``smorx_contracts`` master contract package."""

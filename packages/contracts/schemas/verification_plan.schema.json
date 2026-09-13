@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "verification_plan",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": [
+    "id", "version", "title", "claim_ids", "modalities", "status", "locked", "created_at"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "title": {"type": "string"},
+    "claim_ids": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "modalities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["STATIC_ANALYSIS", "DIFFERENTIAL_EXECUTION", "HISTORICAL_GHOST_REPLAY", "METAMORPHIC_CHECK", "ADVERSARIAL_SCENARIO", "MUTATION_TEST"]
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["DRAFT", "LOCKED", "COMPLETED", "SUPERSEDED"]
+    },
+    "locked": {"type": "boolean"},
+    "created_at": {"type": "string", "format": "date-time"}
+  }
+}

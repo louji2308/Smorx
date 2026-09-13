@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "behavioral_delta",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": [
+    "id", "version", "change_id", "candidate_patch_id", "classification",
+    "claim_id", "intent_alignment", "observed_at"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "change_id": {"type": "string"},
+    "candidate_patch_id": {"type": "string"},
+    "classification": {
+      "type": "string",
+      "enum": ["ADDED", "REMOVED", "ALTERED", "UNCHANGED", "UNEXPLAINED"]
+    },
+    "claim_id": {"type": "string"},
+    "authorized": {"type": ["boolean", "null"]},
+    "intent_alignment": {
+      "type": "string",
+      "enum": ["PENDING", "ALIGNED", "MISALIGNED"]
+    },
+    "observed_at": {"type": "string", "format": "date-time"},
+    "evidence_ids": {"type": "array", "items": {"type": "string"}}
+  }
+}

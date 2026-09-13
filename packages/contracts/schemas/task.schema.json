@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "task",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": [
+    "id", "version", "title", "change_id", "repository",
+    "objective", "status", "created_at"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "title": {"type": "string"},
+    "change_id": {"type": "string", "description": "Change identity, e.g. Change #184."},
+    "repository": {"type": "string"},
+    "objective": {"type": "string"},
+    "status": {
+      "type": "string",
+      "enum": ["CREATED", "INSPECTED", "PLANNED", "EXECUTING", "OBSERVED", "FAILED", "ITERATING", "VERIFYING", "VERIFIED", "BLOCKED"]
+    },
+    "acceptance_criteria": {"type": "array", "items": {"type": "string"}},
+    "constraints": {"type": "array", "items": {"type": "string"}},
+    "created_at": {"type": "string", "format": "date-time"}
+  }
+}

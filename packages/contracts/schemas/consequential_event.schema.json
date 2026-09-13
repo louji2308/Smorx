@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "consequential_event",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": ["event_type", "occurred_at", "trace_id", "payload"],
+  "properties": {
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "TASK_RECEIVED", "REPOSITORY_INSPECTED", "PLAN_GENERATED",
+        "SANDBOX_CREATED", "ACTION_EXECUTED", "RESULT_OBSERVED",
+        "FAILURE_CLASSIFIED", "PATCH_GENERATED", "EVIDENCE_RECORDED",
+        "VERIFICATION_RUN", "BEHAVIORAL_DELTA", "INTENT_ALIGNMENT",
+        "REPAIR", "REVERIFICATION", "CERTIFICATION", "MEMORY_UPDATE",
+        "MERGE", "BLOCKED"
+      ]
+    },
+    "occurred_at": {"type": "string", "format": "date-time", "description": "ISO-8601 UTC timestamp string."},
+    "trace_id": {"type": "string", "description": "Correlating trace/session id."},
+    "payload": {"type": "object", "additionalProperties": true, "description": "Additional structured event payload."},
+    "related_task_id": {"type": "string"},
+    "related_run_id": {"type": "string"},
+    "related_claim_id": {"type": "string"},
+    "related_certificate_id": {"type": "string"}
+  }
+}

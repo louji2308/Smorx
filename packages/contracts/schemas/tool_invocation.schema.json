@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "tool_invocation",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": [
+    "id", "version", "action_id", "invocation_id", "tool_name",
+    "tool_type", "arguments", "executed_at"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "action_id": {"type": "string", "description": "The action this invocation serves (cross-reference)."},
+    "invocation_id": {"type": "string"},
+    "tool_name": {"type": "string"},
+    "tool_type": {
+      "type": "string",
+      "enum": ["REPOSITORY", "FILE", "COMMAND", "TEST", "SANDBOX", "MODEL", "VERIFICATION", "CERTIFICATE"]
+    },
+    "arguments": {"type": "object", "additionalProperties": true},
+    "executed_at": {"type": "string", "format": "date-time"},
+    "execution_result": {
+      "type": "object",
+      "description": "Optionally carried execution_result; structure enforced at runtime against the execution_result contract."
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "agent_run",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": [
+    "id", "version", "role", "assignment_id", "status", "started_at"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity / run id."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "role": {
+      "type": "string",
+      "enum": ["ORCHESTRATOR", "CODING", "VERIFICATION", "ARCHAEOLOGY", "EVIDENCE", "REPAIR", "CERTIFICATION", "INTENT", "IMPACT", "KNOWLEDGE"]
+    },
+    "assignment_id": {"type": "string"},
+    "status": {
+      "type": "string",
+      "enum": ["QUEUED", "RUNNING", "COMPLETED", "FAILED", "BLOCKED"]
+    },
+    "phase": {"type": "string"},
+    "summary": {"type": "string"},
+    "started_at": {"type": "string", "format": "date-time"},
+    "finished_at": {
+      "anyOf": [{"type": "string", "format": "date-time"}, {"type": "null"}]
+    }
+  }
+}

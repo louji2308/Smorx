@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "evidence",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": [
+    "id", "version", "claim_id", "evidence_type", "source", "timestamp"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "claim_id": {"type": "string", "description": "Cross-reference: every evidence binds to a claim (e.g. AUTH-017)."},
+    "evidence_type": {
+      "type": "string",
+      "enum": [
+        "STATIC_ANALYSIS", "DIFFERENTIAL_EXECUTION", "HISTORICAL_GHOST_REPLAY",
+        "METAMORPHIC_CHECK", "ADVERSARIAL_SCENARIO", "MUTATION_TEST",
+        "EXECUTION_TRACE", "TEST_RESULT", "RUNTIME_OBSERVATION",
+        "REPOSITORY_SNAPSHOT", "MODEL_DECISION", "CERTIFICATE_BINDING"
+      ]
+    },
+    "source": {"type": "string"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "provenance": {"type": "string"},
+    "related_task_id": {"type": "string"},
+    "related_run_id": {"type": "string"},
+    "related_artifact": {"type": "string"},
+    "machine_result": {"type": "object", "additionalProperties": true},
+    "hash": {"type": "string"}
+  }
+}

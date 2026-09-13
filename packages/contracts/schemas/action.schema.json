@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "action",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": [
+    "id", "version", "agent_run_id", "action_type", "rationale",
+    "target", "expected_result", "performed_at"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "agent_run_id": {"type": "string", "description": "Originating agent run."},
+    "action_type": {
+      "type": "string",
+      "enum": ["INSPECT", "PLAN", "MUTATE", "EXECUTE", "TEST", "VERIFY", "REPAIR", "CERTIFY", "DELEGATE", "DECIDE"]
+    },
+    "rationale": {"type": "string"},
+    "target": {"type": "string"},
+    "expected_result": {"type": "string"},
+    "performed_at": {"type": "string", "format": "date-time"}
+  }
+}

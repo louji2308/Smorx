@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "claim",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": [
+    "id", "version", "claim_id", "statement", "authority",
+    "confidence", "status", "locked", "created_at"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "claim_id": {"type": "string", "description": "Claim identity, e.g. AUTH-017."},
+    "statement": {"type": "string"},
+    "authority": {"type": "string"},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "status": {
+      "type": "string",
+      "enum": ["OBSERVED", "PROTECTED", "UNVERIFIED", "LOCKED", "VIOLATED", "REPAIR_REQUIRED", "CERTIFIED", "HISTORICAL"]
+    },
+    "locked": {"type": "boolean"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "evidence_ids": {"type": "array", "items": {"type": "string"}}
+  }
+}

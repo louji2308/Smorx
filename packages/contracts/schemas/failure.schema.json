@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "failure",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": [
+    "id", "version", "failure_id", "classification", "summary", "observed_at"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "failure_id": {"type": "string", "description": "Failure identity, e.g. F-183."},
+    "classification": {
+      "type": "string",
+      "enum": [
+        "syntax/build failure", "unit-test failure", "integration failure",
+        "environment/dependency failure", "timeout", "permission failure",
+        "tool failure", "ambiguous result", "acceptance-criterion failure",
+        "safety/policy block"
+      ]
+    },
+    "summary": {"type": "string"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "evidence": {"type": "string"},
+    "probable_cause": {"type": "string"},
+    "next_action": {"type": "string"},
+    "related_execution": {"type": "string"},
+    "related_change_id": {"type": "string"}
+  }
+}

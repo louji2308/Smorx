@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "certificate",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": [
+    "id", "version", "certificate_id", "change_id", "commit",
+    "behavioral_delta_id", "verification_evidence_ids", "protected_behaviors",
+    "candidate_patch_id", "status", "issued_at"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "certificate_id": {"type": "string", "description": "Certificate identity, e.g. CERT-0184."},
+    "change_id": {"type": "string", "description": "Cross-reference: change identity."},
+    "commit": {"type": "string", "description": "Cross-reference: bound commit."},
+    "behavioral_delta_id": {"type": "string", "description": "Cross-reference: behavioral delta."},
+    "verification_evidence_ids": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1,
+      "description": "Cross-reference: independent verification evidence."
+    },
+    "intent_ledger_id": {"type": "string"},
+    "protected_behaviors": {"type": "array", "items": {"type": "string"}},
+    "candidate_patch_id": {"type": "string"},
+    "environment": {"type": "object", "additionalProperties": true},
+    "dependency_state": {"type": "object", "additionalProperties": true},
+    "status": {
+      "type": "string",
+      "enum": ["DRAFT", "ISSUED", "CERTIFIED", "REVOKED"]
+    },
+    "certificate_hash": {"type": "string"},
+    "evidence_traversal": {"type": "array", "items": {"type": "string"}},
+    "issued_at": {"type": "string", "format": "date-time"}
+  }
+}

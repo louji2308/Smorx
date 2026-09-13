@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "repair_package",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": [
+    "id", "version", "failure_id", "expected_behavior", "observed_behavior",
+    "affected_claim_id", "evidence_ids", "required_outcome", "created_at"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "failure_id": {"type": "string", "description": "Failure identity, e.g. F-183."},
+    "expected_behavior": {"type": "string"},
+    "observed_behavior": {"type": "string"},
+    "affected_claim_id": {"type": "string", "description": "Affected claim, e.g. AUTH-017."},
+    "evidence_ids": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "suspected_path": {"type": "string"},
+    "required_outcome": {"type": "string"},
+    "acceptance_criteria": {"type": "array", "items": {"type": "string"}},
+    "constraints": {"type": "array", "items": {"type": "string"}},
+    "created_at": {"type": "string", "format": "date-time"}
+  }
+}

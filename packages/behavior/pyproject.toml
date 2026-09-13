@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smorx-behavior"
+version = "0.1.0"
+description = "Behavioral data model and persistence layer for the Software Evolution Intelligence System: portable SQLAlchemy 2.0 primitives and Alembic scaffolding."
+requires-python = ">=3.11"
+dependencies = [
+    "sqlalchemy>=2.0,<3",
+    "aiosqlite>=0.20",
+    "alembic>=1.13",
+    "pydantic>=2.7",
+]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "ASYNC", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]

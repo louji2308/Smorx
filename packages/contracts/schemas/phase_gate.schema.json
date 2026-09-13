@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "phase_gate",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": ["id", "version", "phase", "status", "checks", "started_at"],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "phase": {"type": "string", "description": "Gate phase identifier, e.g. \"0\"."},
+    "status": {
+      "type": "string",
+      "enum": ["PASS", "BLOCKED"]
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "passed": {"type": "boolean"},
+          "detail": {"type": "string"}
+        }
+      }
+    },
+    "started_at": {"type": "string", "format": "date-time"},
+    "finished_at": {
+      "anyOf": [{"type": "string", "format": "date-time"}, {"type": "null"}]
+    },
+    "evidence": {"type": "object", "additionalProperties": {"type": "string"}}
+  }
+}

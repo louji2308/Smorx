@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "subagent_run",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": [
+    "id", "version", "agent_run_id", "capability", "assignment_id",
+    "status", "started_at"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity / run id."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "agent_run_id": {"type": "string", "description": "Parent agent run (attribution)."},
+    "capability": {
+      "type": "string",
+      "enum": ["ARCHAEOLOGY", "KNOWLEDGE", "INTENT", "IMPACT", "CODING", "VERIFICATION", "EVIDENCE", "REPAIR", "CERTIFICATION"]
+    },
+    "assignment_id": {"type": "string"},
+    "status": {
+      "type": "string",
+      "enum": ["QUEUED", "RUNNING", "COMPLETED", "FAILED", "BLOCKED"]
+    },
+    "started_at": {"type": "string", "format": "date-time"},
+    "finished_at": {
+      "anyOf": [{"type": "string", "format": "date-time"}, {"type": "null"}]
+    },
+    "result_summary": {"type": "string"},
+    "evidence_ids": {"type": "array", "items": {"type": "string"}}
+  }
+}

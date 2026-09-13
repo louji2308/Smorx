@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "execution_result",
+  "type": "object",
+  "version": "1.0.0",
+  "additionalProperties": false,
+  "required": [
+    "id", "version", "tool_invocation_id", "command", "working_directory",
+    "exit_code", "stdout", "stderr", "duration_seconds",
+    "started_at", "finished_at"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Stable identity."},
+    "version": {"type": "string", "description": "Semantic version (ADR-0005)."},
+    "tool_invocation_id": {"type": "string"},
+    "command": {"type": "string"},
+    "working_directory": {"type": "string"},
+    "exit_code": {"type": "integer"},
+    "stdout": {"type": "string"},
+    "stderr": {"type": "string"},
+    "duration_seconds": {"type": "number"},
+    "started_at": {"type": "string", "format": "date-time"},
+    "finished_at": {"type": "string", "format": "date-time"},
+    "environment": {"type": "object", "additionalProperties": true}
+  }
+}
