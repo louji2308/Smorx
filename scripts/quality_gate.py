@@ -154,6 +154,8 @@ def _step_format(root: Path, ruff: str) -> StepResult:
         "packages/agent-runtime",
         "packages/behavior",
         "packages/tools",
+        "packages/precode",
+        "packages/develop",
     ]
     cmd = [ruff, "format", "--check", *targets]
     code, output = run_command(cmd, root)
@@ -169,6 +171,8 @@ def _step_lint(root: Path, ruff: str) -> StepResult:
         "packages/agent-runtime",
         "packages/behavior",
         "packages/tools",
+        "packages/precode",
+        "packages/develop",
     ]
     cmd = [ruff, "check", *targets]
     code, output = run_command(cmd, root)
@@ -184,6 +188,8 @@ def _step_typecheck(root: Path) -> StepResult:
         "packages/agent-runtime",
         "packages/behavior",
         "packages/tools",
+        "packages/precode",
+        "packages/develop",
     ]
     code, output = run_command(cmd, root, env=mypy_env(root))
     return StepResult("typecheck", cmd, code, summarize(output), code == 0, False)
@@ -215,6 +221,8 @@ def _step_build(root: Path) -> StepResult:
         "packages/agent-runtime",
         "packages/behavior",
         "packages/tools",
+        "packages/precode",
+        "packages/develop",
         "apps/api/app",
     ]
     missing = [target for target in targets if not (root / target).is_dir()]

@@ -1,6 +1,6 @@
 """Machine-executable phase gates for the Software Evolution Intelligence System.
 
-    python scripts/phase_gate.py [--phase 0|2|3|4] [--live] [--json]
+    python scripts/phase_gate.py [--phase 0|2|3|4|7|8] [--live] [--json]
 
 Evaluates a phase exit gate and emits ``PHASE_N_PASS`` or ``PHASE_N_BLOCKED``
 with a machine-readable evidence map. Exit code is ``0`` only for ``PASS``.
@@ -17,9 +17,9 @@ with a machine-readable evidence map. Exit code is ``0`` only for ``PASS``.
   green, ruff+format+mypy clean.
 
 The pure helpers ``structure_checks``, ``finalize_phase0``, ``finalize_phase2``,
-``finalize_phase3`` and ``finalize_phase4`` are exported so they can be
-exercised by unit tests without depending on the parallel packages landed by
-other agents.
+``finalize_phase3``, ``finalize_phase4`` and ``finalize_phase78`` are exported so
+they can be exercised by unit tests without depending on the parallel packages
+landed by other agents.
 """
 
 from __future__ import annotations
@@ -98,11 +98,32 @@ PHASE4_PATHS: tuple[str, ...] = (
     "tests/integration/test_phase3_phase4_integration.py",
 )
 
+PHASE7_PATHS: tuple[str, ...] = (
+    "packages/precode/src/smorx_precode",
+    "tests/unit/test_precode_change_definition.py",
+    "tests/unit/test_precode_intent_compiler.py",
+    "tests/unit/test_precode_intent_ledger.py",
+    "tests/unit/test_precode_impact_and_plan.py",
+    "tests/unit/test_precode_lock_gate.py",
+    "tests/security/test_precode_adversarial.py",
+    "tests/integration/test_phase7_phase8_flow.py",
+)
+
+PHASE8_PATHS: tuple[str, ...] = (
+    "packages/develop/src/smorx_develop",
+    "tests/unit/test_develop_barrier_handoff.py",
+    "tests/unit/test_develop_sandbox_execution.py",
+    "tests/unit/test_develop_loop.py",
+    "tests/integration/test_phase7_phase8_flow.py",
+)
+
 _SRC_PATHS: tuple[str, ...] = (
     "packages/contracts/src",
     "packages/behavior/src",
     "packages/agent-runtime/src",
     "packages/tools/src",
+    "packages/precode/src",
+    "packages/develop/src",
 )
 
 PHASE2_TEST_SUITES: tuple[str, ...] = (
@@ -130,6 +151,22 @@ PHASE4_TEST_SUITES: tuple[str, ...] = (
     "tests/integration/test_phase3_phase4_integration.py",
 )
 
+PHASE7_TEST_SUITES: tuple[str, ...] = (
+    "tests/unit/test_precode_change_definition.py",
+    "tests/unit/test_precode_intent_compiler.py",
+    "tests/unit/test_precode_intent_ledger.py",
+    "tests/unit/test_precode_impact_and_plan.py",
+    "tests/unit/test_precode_lock_gate.py",
+    "tests/security/test_precode_adversarial.py",
+)
+
+PHASE8_TEST_SUITES: tuple[str, ...] = (
+    "tests/unit/test_develop_barrier_handoff.py",
+    "tests/unit/test_develop_sandbox_execution.py",
+    "tests/unit/test_develop_loop.py",
+    "tests/integration/test_phase7_phase8_flow.py",
+)
+
 PHASE2_MYPY_TARGETS: tuple[str, ...] = (
     "packages/contracts",
     "packages/behavior",
@@ -141,6 +178,13 @@ PHASE3_MYPY_TARGETS: tuple[str, ...] = (
 )
 
 PHASE4_MYPY_TARGETS: tuple[str, ...] = ("packages/tools",)
+
+PHASE7_MYPY_TARGETS: tuple[str, ...] = ("packages/precode",)
+
+PHASE8_MYPY_TARGETS: tuple[str, ...] = (
+    "packages/precode",
+    "packages/develop",
+)
 
 _CONTRACT_COUNT = 17
 _HEALTH_URL = "http://127.0.0.1:8765/health"
@@ -513,6 +557,128 @@ def _check_phase4_quality(root: Path) -> GateCheckResult:
     )
 
 
+def _check_phase7_quality(root: Path) -> GateCheckResult:
+    ruff_targets = ("packages/precode", *PHASE7_TEST_SUITES)
+    return _check_quality_for(
+        root,
+        ruff_targets=ruff_targets,
+        mypy_targets=PHASE7_MYPY_TARGETS,
+        name="phase7_quality",
+    )
+
+
+def _check_phase8_quality(root: Path) -> GateCheckResult:
+    ruff_targets = ("packages/develop", *PHASE8_TEST_SUITES)
+    return _check_quality_for(
+        root,
+        ruff_targets=ruff_targets,
+        mypy_targets=PHASE8_MYPY_TARGETS,
+        name="phase8_quality",
+    )
+
+
+def _check_phase78_tests(root: Path) -> GateCheckResult:
+    code, output = _run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            *PHASE7_TEST_SUITES,
+            *PHASE8_TEST_SUITES,
+            "-q",
+        ],
+        root,
+        timeout=900,
+    )
+    return GateCheckResult("phase78_tests", code == 0, f"exit={code}: {_tail(output)}")
+
+
+def _check_phase7_imports(root: Path) -> GateCheckResult:
+    """Verify the Phase-7 pre-coding surface imports (in-process)."""
+    del root
+    try:
+        required = {
+            "smorx_precode.change_definition": "define_change",
+            "smorx_precode.intent_ledger": "lock_intent_ledger",
+            "smorx_precode.impact": "build_semantic_impact",
+            "smorx_precode.verification_plan": "build_verification_plan",
+            "smorx_precode.lock_gate": "pre_coding_gate",
+        }
+        missing: list[str] = []
+        for module_name, attr in required.items():
+            module = importlib.import_module(module_name)
+            if not hasattr(module, attr):
+                missing.append(f"{module_name}.{attr}")
+        if missing:
+            return GateCheckResult(
+                "phase7_imports", False, "missing symbols: " + ", ".join(missing)
+            )
+    except Exception as exc:  # noqa: BLE001 - gate must capture any import failure
+        return GateCheckResult("phase7_imports", False, f"import failed: {exc}")
+    return GateCheckResult(
+        "phase7_imports", True, "change definition/ledger/impact/plan/gate importable"
+    )
+
+
+def _check_phase8_imports(root: Path) -> GateCheckResult:
+    """Verify the Phase-8 develop surface imports and the barrier refuses
+    unauthenticated handoff types (in-process, no sandbox)."""
+    del root
+    try:
+        required = {
+            "smorx_develop.handoff": "pre_coding_handoff",
+            "smorx_develop.barrier": "ExecutionBarrier",
+            "smorx_develop.agent": "CodingAgentLoop",
+            "smorx_develop.candidates": "compare_candidates",
+            "smorx_develop.trace": "verify_trace_integrity",
+            "smorx_develop.sandbox": "DevelopmentSandbox",
+        }
+        missing: list[str] = []
+        for module_name, attr in required.items():
+            module = importlib.import_module(module_name)
+            if not hasattr(module, attr):
+                missing.append(f"{module_name}.{attr}")
+        if missing:
+            return GateCheckResult(
+                "phase8_imports", False, "missing symbols: " + ", ".join(missing)
+            )
+        from smorx_develop.handoff import HandoffError, pre_coding_handoff
+
+        try:
+            pre_coding_handoff(None, context={"lock_state": "LOCKED"})  # type: ignore[arg-type]
+        except HandoffError:
+            pass
+        else:
+            return GateCheckResult(
+                "phase8_imports",
+                False,
+                "handoff accepted a non-PreCodingContext object",
+            )
+    except Exception as exc:  # noqa: BLE001
+        return GateCheckResult("phase8_imports", False, f"import failed: {exc}")
+    return GateCheckResult(
+        "phase8_imports", True, "handoff/barrier/loop/candidates/trace importable"
+    )
+
+
+def _check_phase78_structure(root: Path) -> list[GateCheckResult]:
+    results: list[GateCheckResult] = []
+    for label, paths in (
+        ("phase7_structure", PHASE7_PATHS),
+        ("phase8_structure", PHASE8_PATHS),
+    ):
+        missing = [rel for rel in paths if not (root / rel).exists()]
+        if missing:
+            results.append(
+                GateCheckResult(label, False, "missing: " + ", ".join(missing))
+            )
+        else:
+            results.append(
+                GateCheckResult(label, True, f"all {len(paths)} required paths present")
+            )
+    return results
+
+
 def _check_phase3_imports(root: Path) -> GateCheckResult:
     """Verify the Phase-3 runtime surface imports (in-process)."""
     del root
@@ -741,6 +907,66 @@ def evaluate_phase4(root: Path | None = None, *, live: bool = False) -> PhaseGat
     return result
 
 
+def finalize_phase78(
+    checks: list[GateCheckResult], *, started_at: str
+) -> PhaseGateResult:
+    """Shared finalize for the Phase 7/8 gates (same contract, joint suites)."""
+    failures = [f"{check.name}: {check.detail}" for check in checks if not check.passed]
+    return PhaseGateResult(
+        status="PHASE_78_PASS" if not failures else "PHASE_78_BLOCKED",
+        checks=checks,
+        failures=failures,
+        started_at=started_at,
+        finished_at=_utc_now(),
+    )
+
+
+def evaluate_phase7(root: Path | None = None, *, live: bool = False) -> PhaseGateResult:
+    """Evaluate the Phase-7 exit gate (Define + Analyze / pre-coding lock).
+
+    PASS requires: structure present, contracts importable, pre-coding
+    surface importable, all Phase-7 unit/adversarial suites green (which
+    include the combined Phase 7→8 flow), quality clean, env clean.
+    """
+    started_at = _utc_now()
+    base = root.resolve() if root is not None else _repo_root()
+    _ensure_src_paths(base)
+    checks = []
+    checks.extend(_check_phase78_structure(base))
+    checks.append(_check_contracts())
+    checks.append(_check_phase7_imports(base))
+    checks.append(_check_phase78_tests(base))
+    checks.append(_check_phase7_quality(base))
+    checks.append(_check_env())
+    result = finalize_phase78(checks, started_at=started_at)
+    result.phase = "7"
+    result.status = result.status.replace("PHASE_78_", "PHASE_7_")
+    return result
+
+
+def evaluate_phase8(root: Path | None = None, *, live: bool = False) -> PhaseGateResult:
+    """Evaluate the Phase-8 exit gate (Develop / Coding Agent / sandbox loop).
+
+    PASS requires: structure present, contracts importable, develop surface
+    importable with handoff type-enforcement, all Phase-8 suites green
+    (including the combined Phase 7→8 flow), quality clean, env clean.
+    """
+    started_at = _utc_now()
+    base = root.resolve() if root is not None else _repo_root()
+    _ensure_src_paths(base)
+    checks = []
+    checks.extend(_check_phase78_structure(base))
+    checks.append(_check_contracts())
+    checks.append(_check_phase8_imports(base))
+    checks.append(_check_phase78_tests(base))
+    checks.append(_check_phase8_quality(base))
+    checks.append(_check_env())
+    result = finalize_phase78(checks, started_at=started_at)
+    result.phase = "8"
+    result.status = result.status.replace("PHASE_78_", "PHASE_8_")
+    return result
+
+
 def _print_result(result: PhaseGateResult) -> None:
     print(f"PHASE {result.phase} EXIT GATE")
     for check in result.checks:
@@ -758,7 +984,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--phase",
         type=str,
-        choices=("0", "2", "3", "4"),
+        choices=("0", "2", "3", "4", "7", "8"),
         default="0",
         help="phase gate to evaluate (default: 0)",
     )
@@ -774,6 +1000,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = evaluate_phase3(live=args.live)
     elif args.phase == "4":
         result = evaluate_phase4(live=args.live)
+    elif args.phase == "7":
+        result = evaluate_phase7(live=args.live)
+    elif args.phase == "8":
+        result = evaluate_phase8(live=args.live)
     else:
         result = evaluate_phase0(live=args.live)
     if args.json:

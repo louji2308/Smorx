@@ -22,6 +22,8 @@ _PYTHON_PATH_ENTRIES = (
     _ROOT / "packages" / "agent-runtime" / "src",
     _ROOT / "packages" / "behavior" / "src",
     _ROOT / "packages" / "tools" / "src",
+    _ROOT / "packages" / "precode" / "src",
+    _ROOT / "packages" / "develop" / "src",
     _ROOT / "scripts",
 )
 
