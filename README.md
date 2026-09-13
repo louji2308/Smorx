@@ -32,6 +32,15 @@ packages/agent-runtime/ Phase 3 orchestrator runtime (module smorx_runtime): age
 packages/tools/         Phase 4 tool layer + policy/control plane (module smorx_tools):
                         tool registry, execution, policies, audit trail, human and
                         sandbox control, repository/file handlers, control plane.
+packages/precode/       Phase 7 Define+Analyze (module smorx_precode): change
+                        definition, intent compilation, constitutional constraints,
+                        intent ledger + lock, semantic impact map, verification
+                        planner + lock, pre-coding context and lock gate.
+packages/develop/       Phase 8 Develop (module smorx_develop): pre-coding handoff,
+                        execution barrier, repository inspection, development plan,
+                        sandbox workflow, coding-agent loop, execution capture with
+                        the F1-F10 failure taxonomy, bounded repair, candidate
+                        comparison, hash-chained execution traces.
 packages/evidence/      Reserved (required by the structure gate; not yet created).
 packages/verification/  Reserved (required by the structure gate; not yet created).
 packages/ui/            Reserved (required by the structure gate; not yet created).
@@ -98,6 +107,37 @@ infrastructure/nebius/  Planned (referenced by the structure gate; reference
   invocations, retry-budget and no-progress blocking, serialized exclusivity,
   policy BLOCK, honest `UNAVAILABLE`, audit-attribution integrity, stale-result
   rejection, and invalid state transitions.
+- **Phase 7 - Define + Analyze** (`packages/precode`, module `smorx_precode`):
+  change definition that rejects incomplete requests (critical requirements are
+  never inferred), five-dimension intent compilation (ADD/REPLACE/PRESERVE/
+  PERFORMANCE/SECURITY, ambiguity rejected, implicit PRESERVE guard),
+  constitutional constraint resolution against the locked Behavioral
+  Constitution (REPLACE conflicts surfaced with explicit-authorization risk
+  notes), the Intent Ledger with a permanent single-flip lock and ADR-0005
+  version bumps, the structured Semantic Impact Map (behaviors, components,
+  dependencies, data flows, risk zones, Ghosts - a bare file list is rejected),
+  the coverage-validated Verification Plan, and the pre-coding lock gate that
+  produces the machine-readable PRE_CODING_CONTEXT and refuses to PASS unless
+  every required object is valid and locked. Gate: `PHASE_7_PASS`.
+- **Phase 8 - Develop / Coding Agent / Real Sandbox Loop** (`packages/develop`,
+  module `smorx_develop`): pre-coding handoff with exact-version binding and
+  forward-supersession stale-context rejection, the execution barrier (BLOCK on
+  any failed condition - locked intent/impact/plan, version identity, explicit
+  authorization), structured repository inspection, validated development plans,
+  the sandbox workflow (real provider delegation when a `SandboxPort` is bound;
+  an honestly labeled disposable local workspace otherwise; refusal to fabricate
+  when neither is permitted), controlled attributed file mutations, real command
+  execution with exit-code authority, the F1-F10 failure taxonomy, the bounded
+  EXECUTE->OBSERVE->CLASSIFY->DIAGNOSE->DECIDE->MODIFY->RE-EXECUTE loop
+  (repairs require a diagnosis; unauthorized repairs are denied by policy;
+  success requires passing machine records; iteration/runtime/command/repair/
+  no-progress bounds BLOCK), evidence-based multi-candidate comparison, and
+  hash-chained attributable execution traces. The output is a CANDIDATE, never
+  certified. Gate: `PHASE_8_PASS`.
+- **Combined Phase 7->8 integration**: the full chain (request -> locks ->
+  context -> handoff -> barrier -> sandbox -> fail -> diagnose -> repair ->
+  passing candidate -> trace integrity) runs against real database rows and
+  real subprocess executions in `tests/integration/test_phase7_phase8_flow.py`.
 
 ## Setup
 
@@ -107,11 +147,12 @@ Requirements: Python 3.11.
 python -m venv .venv
 .venv\Scripts\activate                    # Windows
 source .venv/bin/activate                 # POSIX
-pip install -e packages/contracts packages/behavior packages/agent-runtime packages/tools
+pip install -e packages/contracts packages/behavior packages/agent-runtime packages/tools packages/precode packages/develop
 ```
 
-The four editable packages are `smorx-contracts`, `smorx-behavior`,
-`smorx-runtime`, and `smorx-tools` (each declared in its `pyproject.toml`).
+The editable packages are `smorx-contracts`, `smorx-behavior`,
+`smorx-runtime`, `smorx-tools`, `smorx-precode`, and `smorx-develop` (each
+declared in its `pyproject.toml`).
 The API service keeps its own virtualenv under `apps/api/.venv`.
 
 Tooling: `ruff` (lint + format), `mypy --strict`, `pytest` (root `pytest.ini`
@@ -131,27 +172,31 @@ Run a machine-executable phase gate:
 ```bash
 python scripts/phase_gate.py --phase 0
 python scripts/phase_gate.py --phase 2
+python scripts/phase_gate.py --phase 7
+python scripts/phase_gate.py --phase 8
 ```
 
-The gate CLI supports phases 0, 2, 3 and 4 and emits `PHASE_N_PASS` or
+The gate CLI supports phases 0, 2, 3, 4, 7 and 8 and emits `PHASE_N_PASS` or
 `PHASE_N_BLOCKED` with a machine-readable evidence map (exit code 0 only for
 PASS). Phase 3 and Phase 4 were gated both through their dedicated end-to-end
 runs (`PHASE3_GATE: PASS`, `PHASE4_GATE: PASS`) and through the machine gate:
 `python scripts/phase_gate.py --phase 3` → `PHASE_3_PASS`,
-`python scripts/phase_gate.py --phase 4` → `PHASE_4_PASS`.
+`python scripts/phase_gate.py --phase 4` → `PHASE_4_PASS`. Phases 7 and 8 gate
+as `PHASE_7_PASS` / `PHASE_8_PASS`.
 
 ## Tests
 
-Current full suite (Phase 3/4 completion state):
+Current full suite (Phase 7/8 completion state):
 
 ```bash
-python -m pytest tests/unit tests/integration tests/security   # 415 passed
+python -m pytest tests/unit tests/integration tests/security   # 516 passed
 ```
 
-- Unit: 371 tests.
-- Integration: 24 tests (`tests/integration/test_phase3_phase4_integration.py`
-  plus earlier lifecycle/certificate/reference suites).
-- Security: 20 adversarial scenarios.
+- Unit: 451 tests.
+- Integration: 27 tests (Phase 3/4 trust chain, lifecycle/certificate/reference,
+  and the combined Phase 7->8 flow).
+- Security: 27 adversarial scenarios (the 20-scenario Phase 3/4 suite plus the
+  7-scenario Phase 7 pre-coding suite).
 
 Earlier-phase suites, run individually:
 
@@ -189,6 +234,12 @@ documented in `apps/api/.env.example`.
 - Real Nebius sandbox and inference endpoints are not yet bound because no
   credentials have been provided. `UNAVAILABLE` responses for sandbox
   operations are intentional honesty, not a bug (AGENTS.md section 3).
+  The Phase 8 coding-agent loop is proven end to end on the honestly labeled
+  LOCAL_WORKSPACE backend; the PROVIDER backend (the Nebius path) is
+  implemented and typed but requires credentials to exercise.
+- The Phase 7/8 UI journeys (Change Definition through Candidate Patch) are
+  not yet mounted: they are built against the persistent shell from Phases 5/6
+  and are the next work item once the shell lands.
 - Supabase PostgreSQL has not been exercised; persistence is tested against
   SQLite per the confirmed SQLite-test-first decision.
 - The web UI and the `packages/evidence`, `packages/verification`, and

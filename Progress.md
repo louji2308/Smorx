@@ -1,8 +1,62 @@
 # Progress — Software Evolution Intelligence System
 
 ## Current Phase
-- Phase: 4 — Tool Layer + Policy/Control Plane (`IMPLEMENTATION_PLAN.md` §4)
-- Status: VERIFIED (Phase 3 and Phase 4 gates PASS; combined integration + adversarial suites green; commits pending user approval)
+- Phase: 7 — Define + Analyze AND 8 — Develop/Coding Agent (`IMPLEMENTATION_PLAN.md` §7, §8) — THIS SESSION
+- Status: GATES PASS (`PHASE_7_PASS`, `PHASE_8_PASS`, quality gate ALL PASSED; commits pending user approval)
+
+## Phase 7 — Define + Analyze (complete, gated)
+- New package `packages/precode` (module `smorx_precode`), composing the real `smorx_contracts` schemas and `smorx_behavior` persistence/versioning — no parallel concepts invented:
+  - 7.1 `change_definition.py` — normalizes the human request into objective/repository/constraints/acceptance-criteria/priority/execution-budget; rejects incomplete requests naming EVERY missing field; critical requirements (objective, repository, acceptance criteria) are never inferred; budget validation feeds Phase 8 loop bounds.
+  - 7.2 `intent_compiler.py` — five DISTINCT dimensions (ADD/REPLACE/PRESERVE/PERFORMANCE/SECURITY) as contract `Intent` objects; deterministic ambiguity markers rejected; implicit PRESERVE guard appended when none declared (a REPLACE never authorizes destruction elsewhere).
+  - 7.3/7.4 `intent_ledger.py` — persists IntentLedger+IntentItem; `lock_intent_ledger` flips LOCKED exactly once (idempotent) and authorizes items at lock time; post-lock in-place mutation raises `VersionLockedError`; `bump_intent_ledger` creates a new identity per ADR-0005 (history preserved); `resolve_constraints` maps intent onto the real locked Constitution's `ConstitutionClaim.rule` text, flags REPLACE overlaps as conflicts + risk notes (historical behavior is evidence, not automatically intent).
+  - 7.5 `impact.py` — structured Semantic Impact Map (BEHAVIOR/COMPONENT/FILE/DEPENDENCY/DATA_FLOW/RISK_ZONE/GHOST nodes + IMPACTS/DEPENDS_ON/FLOWS_INTO/PROTECTS/HISTORY_FOR relationships) persisted in the real `SemanticImpact.scope`; validates structure and REJECTS a bare file list without behaviors; permanent lock.
+  - 7.6/7.7 `verification_plan.py` — bidirectional coverage validation (every case targets an affected behavior; every behavior covered by ≥1 case; unknown kinds/duplicate names rejected); persists real `VerificationPlan`+`VerificationCase`; lock covers plan AND cases permanently.
+  - 7.7/7.9 `lock_gate.py` — assembles the PRE_CODING_CONTEXT (context_id + task/change/ledger/constitution/impact/plan ids + exact versions + lock_state) and returns PASS only with definition valid + ledger/constitution/impact/plan LOCKED and cross-references consistent; BLOCKED verdicts name every failed requirement.
+- Tests: 54 Phase-7 tests total (change definition 10, intent compiler 12, intent ledger 9, impact+plan 12, lock gate 6, adversarial §12 scenarios 1–6/12 = 7); detailed counts in the Tests section below.
+
+## Phase 8 — Develop / Coding Agent / Real Sandbox Loop (complete, gated)
+- New package `packages/develop` (module `smorx_develop`):
+  - 8.1 `handoff.py` — receives the real `PreCodingContext` verbatim (no prose reconstruction); rejects BLOCKED contexts; stale-context protection = exact version identity PLUS forward-supersession detection (a v1 context is refused once a successor version exists in the lineage, because bumping a locked row preserves the historical row locked at the same version).
+  - 8.2 `barrier.py` — `ExecutionBarrier.evaluate/require_pass`: intent locked, constitution context, impact map locked+version-matched, verification plan locked+version-matched, explicit authorization flag; ANY failure → BLOCKED (never "continue anyway").
+  - 8.3 `inspection.py` — deterministic structured inspection of a real filesystem root (entry points, dependencies from pyproject, config, tests, sources) with per-step trace; never invents files.
+  - 8.4 `plan.py` — validated explicit plan (interpretation/affected files/strategy/tests-to-run/completion-criteria/risk); incomplete plans rejected (no unanchored editing).
+  - 8.5 `sandbox.py` — `DevelopmentSandbox` with two honest backends: PROVIDER (delegates to a real `SandboxPort` — the Nebius path) and LOCAL_WORKSPACE (disposable copy, honestly labeled everywhere; `allow_local_workspace=False` → `SandboxUnavailableError` "refusing to fabricate"); controlled attributed mutations (before/after sha256, reason, containment via `Path.relative_to`); real checkpoint/rollback; destroy.
+  - 8.6–8.8 `execution.py` — `ExecutionCapture` binds sandbox identity to every run; `ExecutionRecord` carries command/cwd/timestamps/exit code/streams/timeout/failure_code; machine result authoritative (I2). `classify_failure` implements F1–F10 deterministically (F5 timeout, F6 permission, F10 policy, F1 build hints, F2/F3 by command kind, F8 ambiguous fallback).
+  - 8.9/8.10 `agent.py` — `CodingAgentLoop`: barrier PASS required before execution (POLICY_STOP otherwise, zero executions); EXECUTE→OBSERVE→CLASSIFY→DIAGNOSE→DECIDE→MODIFY→RE-EXECUTE; REPAIR requires a Diagnosis (observed≠root cause) and an explicit authorization flag — unauthorized repairs are recorded DENIED_BY_POLICY and never executed; success decided ONLY from exit_code==0 records (a STOP can end the loop but can never mark it passed); bounds enforced via `LoopBoundsController` (iterations/runtime/commands/repairs + no-progress threshold on materially-equivalent failure signatures).
+  - 8.11 `candidates.py` — evidence-based comparison: only `CANDIDATE_PASSED` candidates are selectable; ranking by (completion, fewer failures, faster total duration, deterministic index); ALL_FAILED selects nothing.
+  - 8.12 `trace.py` — hash-chained Task→Decision→ToolInvocation→ExecutionResult→Mutation trace (`sha256(seq|prev|payload)`); `verify_trace_integrity` detects payload tampering and reordering.
+- Real execution evidence: loop tests drive real subprocesses (`sys.executable -c ...`) inside the sandbox workspace — first pass fails (file missing), diagnosis-driven repair writes the file, re-execution exits 0; exit codes are machine facts, not staged results.
+
+## Combined Phase 7→8 Integration (`tests/integration/test_phase7_phase8_flow.py`)
+- Full §14 chain on real rows + real subprocesses: request→definition→compilation→mapping→INTENT LOCK→impact→plan→VERIFICATION LOCK→gate PASS→handoff (exact versions)→barrier PASS→inspection→plan→sandbox→loop (fail→diagnose→repair→pass)→candidate→trace integrity→`compare_candidates` SELECTED; final state asserted CANDIDATE_PASSED — never CERTIFIED (I7).
+- Stale-context protection proven at the combined level: bumping Intent to v2 after context mint → handoff raises "superseded", barrier BLOCKED.
+- §12 multi-candidate: 17 (A beats B by completion), 18 (B beats A), 19 (all fail → no selection).
+
+## Parallel Agent Wave (this session)
+- Subagent-spawn tooling and `opencode`/`catenary` are NOT available in this environment (AGENTS.md §5 limitation recorded honestly). Decomposition was achieved via contract-bounded modules with disjoint ownership — the same boundaries a subagent wave would have used: change-definition/intent (A), impact/verification/gate (B), barrier/handoff/inspection/plan (C), sandbox/execution/taxonomy (D), loop/bounds (E), candidates/trace (F) — integrated and critically reviewed by the orchestrator (this session), which fixed: stale `repository_slug` field, wrong `constitution_version` source in the gate, `get_lineage` backward-only semantics (replaced with forward-supersession detection), Windows path containment bug (`relative_to`), candidate ranking order, EN-dash lint debt.
+
+## Tests (this session)
+- New unit: 29 (change definition 10, intent compiler 12, intent ledger 9 minus overlap — exact: 10+12+9) + impact/plan 12 + lock gate 6 + barrier/handoff 7 + sandbox/execution 17 + loop/bounds/candidates/trace 21.
+- New adversarial: 7 (`tests/security/test_precode_adversarial.py`, §12 scenarios 1–6, 12).
+- New integration: 3 (`tests/integration/test_phase7_phase8_flow.py` — full chain, multi-candidate, stale-context).
+- Full suite: `pytest tests/unit tests/integration tests/security` → **516 passed** (was 415 before this session).
+- Gates: `PHASE_7_PASS`, `PHASE_8_PASS` (`python scripts/phase_gate.py --phase 7|8`); quality gate ALL PASSED (env, secret scan, audit, ruff check+format, mypy strict 66 source files, unit, integration, security, build).
+- Chrome DevTools: N/A — no browser surface was created; Phase 7/8 UI is deliberately deferred to avoid colliding with the parallel session that owns Phases 5/6 (`apps/web/app/*`).
+- Sandbox: real LOCAL_WORKSPACE subprocess execution evidenced (exit codes, stdout, durations); the PROVIDER (Nebius) path is implemented and typed but honestly UNAVAILABLE without credentials — no mocks.
+
+## Blockers / Risks
+- No Nebius credentials (`NEBIUS_API_KEY`, project id) — the Phase 8 PROVIDER backend cannot run a real Nebius sandbox E2E; the loop is proven on the honest local backend. Providing credentials should only require binding a `SandboxPort` implementation to `SandboxControl`.
+- No commit approval received — Phase 7/8 work (2 packages, 10 test files, gate/quality extensions, pytest/conftest plumbing) is uncommitted (AGENTS.md §32).
+- Phase 7/8 UI (Change Definition → … → Candidate Patch journey surfaces) is intentionally NOT built in this session to respect the Phase 5/6 session's file ownership; it is the next work item once the shell lands.
+
+## Session Coordination Record (2026-09-13)
+- This session owns Phase 7 (packages/precode: change definition, intent compiler, constitutional mapping, Intent Ledger, semantic impact, verification planner, pre-coding lock) and Phase 8 (packages/develop: handoff, execution barrier, inspection, plan, sandbox adapters, controlled mutation, execution, failure taxonomy, repair loop, candidates, traces) plus their tests and gates.
+- A parallel session owns Phases 5/6 (persistent shell, design system, Discover/Govern). This session will NOT modify `apps/web/app/page.tsx`, `layout.tsx`, `globals.css`, or Discover/Govern surfaces. Phase 7/8 UI work, if any, is deferred to avoid file collisions with that session.
+- `catenary` CLI is not available in this environment (exit 127), so cross-session coordination is file-based: append-only Progress entries + disjoint file ownership.
+- Subagent-spawn tooling and `opencode` are unavailable in this environment (AGENTS.md §5 limitation recorded honestly; decomposition is achieved via contract-bounded modules instead, same ownership boundaries as subagent waves).
+- Governing docs conflict note: the Phase 7/8 master prompt names NeMo Agent Toolkit as the agent runtime; the implemented Phase 3/4 runtime (`smorx_runtime` + `smorx_tools` ControlPlane) already occupies that architectural slot and the plan's §0.5/§4/§5 rules. Resolution: Phase 7/8 compose the existing runtime/contracts/behavior/tools packages rather than introducing a second agent framework. Recorded here; no governing file edited.
+
+## Historical Phase 4 entry preserved below (unchanged)
 
 ## Phase 3 — Parallel Orchestration Runtime (complete)
 - Decision rationale: `IMPLEMENTATION_PLAN.md` sequences the orchestrator before the tool layer — sub-agent execution, attribution, and state transitions must exist before policy control wraps them. Wave-1 modules in `packages/agent-runtime` (module `smorx_runtime`) were produced by three parallel contract-bounded subagents with disjoint ownership by module.
