@@ -45,6 +45,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.deps = deps
     app.include_router(create_router(deps))
+
+    from app.api.behavior_routes import create_behavior_router
+    from app.behavior.adapter import build_behavior_adapter
+
+    behavior = deps.behavior
+    if behavior is None:
+        behavior = build_behavior_adapter(
+            database_url=resolved.behavior_database_url,
+            auto_seed=resolved.behavior_auto_seed,
+        )
+    app.include_router(create_behavior_router(behavior))
+
     app.add_exception_handler(InfrastructureError, _infrastructure_error_handler)
     return app
 

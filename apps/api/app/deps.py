@@ -4,6 +4,7 @@ import importlib
 from dataclasses import dataclass
 from typing import Any, cast
 
+from app.behavior import BehaviorAdapter
 from app.contracts import SandboxExecutionPort
 from app.errors import ConfigurationError
 from app.model import ModelRouter, NemotronModelService
@@ -21,6 +22,7 @@ class Dependencies:
     sandbox: SandboxExecutionPort | None
     runtime: AgentRuntime
     proof: ProofPathService
+    behavior: BehaviorAdapter | None = None
 
 
 def build_model_client(settings: Settings) -> Any:
@@ -62,6 +64,13 @@ def build_dependencies(settings: Settings | None = None) -> Dependencies:
     sandbox = _build_sandbox_optional(resolved)
     runtime = AgentRuntime(settings=resolved, model_service=model_service, sandbox=sandbox)
     proof = ProofPathService(settings=resolved, model_service=model_service, sandbox=sandbox)
+
+    from app.behavior.adapter import build_behavior_adapter
+
+    behavior = build_behavior_adapter(
+        database_url=resolved.behavior_database_url,
+        auto_seed=resolved.behavior_auto_seed,
+    )
     return Dependencies(
         settings=resolved,
         model_client=model_client,
@@ -70,4 +79,5 @@ def build_dependencies(settings: Settings | None = None) -> Dependencies:
         sandbox=sandbox,
         runtime=runtime,
         proof=proof,
+        behavior=behavior,
     )

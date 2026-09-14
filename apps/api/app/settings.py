@@ -46,6 +46,9 @@ class Settings(BaseSettings):
 
     infra_check_on_startup: bool = Field(default=False)
 
+    behavior_database_url: str | None = Field(default=None)
+    behavior_auto_seed: bool = Field(default=True)
+
     @field_validator("nebius_api_key")
     @classmethod
     def strip_key(cls, v: str) -> str:

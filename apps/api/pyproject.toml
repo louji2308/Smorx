@@ -13,6 +13,8 @@ dependencies = [
     "contree-client>=0.4.0",
     "httpx>=0.28",
     "python-dotenv>=1.0",
+    "sqlalchemy>=2.0,<3",
+    "aiosqlite>=0.20",
 ]
 
 [project.optional-dependencies]
