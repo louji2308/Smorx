@@ -42,7 +42,18 @@ packages/develop/       Phase 8 Develop (module smorx_develop): pre-coding hando
                         the F1-F10 failure taxonomy, bounded repair, candidate
                         comparison, hash-chained execution traces.
 packages/evidence/      Reserved (required by the structure gate; not yet created).
-packages/verification/  Reserved (required by the structure gate; not yet created).
+packages/verification/  Phase 9 Independent Verification (module smorx_verification):
+                        six real verification modules (static analysis, differential
+                        execution, historical ghost replay, metamorphic checks,
+                        adversarial scenarios, mutation testing) that emit
+                        claim-level evidence; independent trust/provenance layering
+                        and a dedicated VerificationActor whose actor_run_id differs
+                        from the source agent run.
+packages/delta/         Phase 10 Verify to Decide (module smorx_delta): handoff that
+                        only admits COMPLETED VERIFICATION_RESULT_V1 results, Candidate
+                        Patch #2 with the original preserved untouched, deterministic
+                        behavioral-delta classification, intent alignment, decision
+                        gates with allow_merge, and an evidence-bound repair loop.
 packages/ui/            Reserved (required by the structure gate; not yet created).
 scripts/                quality_gate.py, phase_gate.py, env_check.py, validate_env.py,
                         scan_secrets.py, audit_deps.py, verify_migration.py.
@@ -65,8 +76,7 @@ infrastructure/nebius/  Planned (referenced by the structure gate; reference
   environment/secret/dependency checks, `scripts/quality_gate.py`, and
   `scripts/phase_gate.py`. The Phase 0 gate remains BLOCKED only on reserved
   structure gaps that later phases create (`packages/evidence`,
-  `packages/verification`, `packages/ui`, `infrastructure/docker`,
-  `infrastructure/nebius`).
+  `packages/ui`, `infrastructure/docker`, `infrastructure/nebius`).
 - **Phase 1 - Nebius + NVIDIA infrastructure layer** (`apps/api`): FastAPI service
   with Token Factory inference routing, Nemotron model routing across three
   tiers, evidence-bound `machine_verifiable`, proof-of-execution, and a ConTree
@@ -134,6 +144,24 @@ infrastructure/nebius/  Planned (referenced by the structure gate; reference
   no-progress bounds BLOCK), evidence-based multi-candidate comparison, and
   hash-chained attributable execution traces. The output is a CANDIDATE, never
   certified. Gate: `PHASE_8_PASS`.
+- **Phase 9 - Independent Verification** (`packages/verification`, module
+  `smorx_verification`): six real verification modules (static analysis,
+  differential execution, historical ghost replay, metamorphic checks,
+  adversarial scenarios, mutation testing) that emit claim-level evidence; trust
+  layering from static analysis through the independent trust and provenance
+  layers; a `VerificationActor` whose `actor_run_id` differs from the source
+  agent run (the coding decision never verifies itself), and evidence binding so
+  claims are only as strong as the execution evidence behind them. Gate:
+  `PHASE_9_PASS`.
+- **Phase 10 - Verify to Decision** (`packages/delta`, module `smorx_delta`):
+  handoff that only admits COMPLETED `VERIFICATION_RESULT_V1` results, Candidate
+  Patch #2 with the original Candidate Patch preserved untouched, deterministic
+  behavioral-delta classification (UNCHANGED/ALTERED/ADDED/UNEXPLAINED; no
+  evidence => UNEXPLAINED even with a SUPPORTING claim), intent alignment across
+  CONSTRAINT/REQUIREMENT/SECURITY/PERFORMANCE, the decision gates (BLOCKED /
+  INSUFFICIENT_EVIDENCE / REPAIR_REQUIRED / ELIGIBLE_TO_CONTINUE) with
+  `allow_merge` only on ELIGIBLE_TO_CONTINUE, and an evidence-bound repair loop.
+  Gate: `PHASE_10_PASS`.
 - **Combined Phase 7->8 integration**: the full chain (request -> locks ->
   context -> handoff -> barrier -> sandbox -> fail -> diagnose -> repair ->
   passing candidate -> trace integrity) runs against real database rows and
@@ -147,12 +175,13 @@ Requirements: Python 3.11.
 python -m venv .venv
 .venv\Scripts\activate                    # Windows
 source .venv/bin/activate                 # POSIX
-pip install -e packages/contracts packages/behavior packages/agent-runtime packages/tools packages/precode packages/develop
+pip install -e packages/contracts packages/behavior packages/agent-runtime packages/tools packages/precode packages/develop packages/verification packages/delta
 ```
 
 The editable packages are `smorx-contracts`, `smorx-behavior`,
-`smorx-runtime`, `smorx-tools`, `smorx-precode`, and `smorx-develop` (each
-declared in its `pyproject.toml`).
+`smorx-runtime`, `smorx-tools`, `smorx-precode`, `smorx-develop`,
+`smorx-verification`, and `smorx-delta` (each declared in its
+`pyproject.toml`).
 The API service keeps its own virtualenv under `apps/api/.venv`.
 
 Tooling: `ruff` (lint + format), `mypy --strict`, `pytest` (root `pytest.ini`
@@ -174,15 +203,18 @@ python scripts/phase_gate.py --phase 0
 python scripts/phase_gate.py --phase 2
 python scripts/phase_gate.py --phase 7
 python scripts/phase_gate.py --phase 8
+python scripts/phase_gate.py --phase 9
+python scripts/phase_gate.py --phase 10
 ```
 
-The gate CLI supports phases 0, 2, 3, 4, 7 and 8 and emits `PHASE_N_PASS` or
-`PHASE_N_BLOCKED` with a machine-readable evidence map (exit code 0 only for
-PASS). Phase 3 and Phase 4 were gated both through their dedicated end-to-end
-runs (`PHASE3_GATE: PASS`, `PHASE4_GATE: PASS`) and through the machine gate:
-`python scripts/phase_gate.py --phase 3` → `PHASE_3_PASS`,
-`python scripts/phase_gate.py --phase 4` → `PHASE_4_PASS`. Phases 7 and 8 gate
-as `PHASE_7_PASS` / `PHASE_8_PASS`.
+The gate CLI supports phases 0, 2, 3, 4, 7, 8, 9 and 10 and emits
+`PHASE_N_PASS` or `PHASE_N_BLOCKED` with a machine-readable evidence map (exit
+code 0 only for PASS). Phase 3 and Phase 4 were gated both through their
+dedicated end-to-end runs (`PHASE3_GATE: PASS`, `PHASE4_GATE: PASS`) and
+through the machine gate: `python scripts/phase_gate.py --phase 3` →
+`PHASE_3_PASS`, `python scripts/phase_gate.py --phase 4` → `PHASE_4_PASS`.
+Phases 7 and 8 gate as `PHASE_7_PASS` / `PHASE_8_PASS`, and phases 9 and 10
+gate as `PHASE_9_PASS` / `PHASE_10_PASS`.
 
 ## Tests
 
@@ -197,6 +229,10 @@ python -m pytest tests/unit tests/integration tests/security   # 516 passed
   and the combined Phase 7->8 flow).
 - Security: 27 adversarial scenarios (the 20-scenario Phase 3/4 suite plus the
   7-scenario Phase 7 pre-coding suite).
+- Phase 9/10 targeted run: **85 passed** (17 phase-gate contract tests, 28
+  verification trust, 17 verification wave, 21 delta core, 2 integration
+  flow), covering the real six-module verification wave and the
+  verify-to-decision chain.
 
 Earlier-phase suites, run individually:
 
@@ -242,9 +278,9 @@ documented in `apps/api/.env.example`.
   and are the next work item once the shell lands.
 - Supabase PostgreSQL has not been exercised; persistence is tested against
   SQLite per the confirmed SQLite-test-first decision.
-- The web UI and the `packages/evidence`, `packages/verification`, and
-  `packages/ui` packages are reserved for later phases; the product journeys
-  and certification UI are planned, not yet implemented.
+- The web UI and the `packages/evidence` and `packages/ui` packages are
+  reserved for later phases; the product journeys and certification UI are
+  planned, not yet implemented.
 - `infrastructure/docker` and `infrastructure/nebius` contain reference/planned
   artifacts only; real provisioning is blocked on credentials.
 - The working tree is uncommitted pending explicit commit approval

@@ -174,3 +174,50 @@ def test_evaluate_phase0_smoke_with_contracts(tmp_path: Path) -> None:
     assert contracts.passed is True
     health = next(check for check in result.checks if check.name == "health_live")
     assert "skipped" in health.detail
+
+
+def test_finalize_phase910_all_pass_is_pass() -> None:
+    checks = [
+        phase_gate.GateCheckResult("phase9_structure", True, "present"),
+        phase_gate.GateCheckResult("phase9_imports", True, "surface importable"),
+        phase_gate.GateCheckResult("phase910_tests", True, "exit=0"),
+    ]
+
+    result = phase_gate.finalize_phase910(
+        checks, started_at="2026-01-01T00:00:00+00:00"
+    )
+
+    assert result.status == "PHASE_910_PASS"
+    assert result.failures == []
+
+
+def test_finalize_phase910_any_failure_blocks() -> None:
+    checks = [
+        phase_gate.GateCheckResult("phase10_imports", True, "ok"),
+        phase_gate.GateCheckResult("phase10_quality", False, "ruff exit=1"),
+    ]
+
+    result = phase_gate.finalize_phase910(
+        checks, started_at="2026-01-01T00:00:00+00:00"
+    )
+
+    assert result.status == "PHASE_910_BLOCKED"
+    assert result.failures == ["phase10_quality: ruff exit=1"]
+
+
+def test_evaluate_phase9_smoke_repo_root() -> None:
+    pytest.importorskip("smorx_verification")
+
+    result = phase_gate.evaluate_phase9(root=phase_gate._repo_root(), live=False)
+
+    assert isinstance(result, phase_gate.PhaseGateResult)
+    assert result.status in ("PHASE_9_PASS", "PHASE_9_BLOCKED")
+
+
+def test_evaluate_phase10_smoke_repo_root() -> None:
+    pytest.importorskip("smorx_delta")
+
+    result = phase_gate.evaluate_phase10(root=phase_gate._repo_root(), live=False)
+
+    assert isinstance(result, phase_gate.PhaseGateResult)
+    assert result.status in ("PHASE_10_PASS", "PHASE_10_BLOCKED")

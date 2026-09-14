@@ -109,6 +109,12 @@ def mypy_env(root: Path) -> dict[str, str]:
         "packages/agent-runtime/src",
         "packages/behavior/src",
         "packages/tools/src",
+        "packages/precode/src",
+        "packages/develop/src",
+        "packages/verification/src",
+        "packages/delta/src",
+        "packages/certification/src",
+        "packages/workflow/src",
     )
     env = dict(os.environ)
     env["MYPYPATH"] = os.pathsep.join(str((root / rel).resolve()) for rel in src_dirs)
@@ -156,6 +162,10 @@ def _step_format(root: Path, ruff: str) -> StepResult:
         "packages/tools",
         "packages/precode",
         "packages/develop",
+        "packages/verification",
+        "packages/delta",
+        "packages/certification",
+        "packages/workflow",
     ]
     cmd = [ruff, "format", "--check", *targets]
     code, output = run_command(cmd, root)
@@ -173,6 +183,10 @@ def _step_lint(root: Path, ruff: str) -> StepResult:
         "packages/tools",
         "packages/precode",
         "packages/develop",
+        "packages/verification",
+        "packages/delta",
+        "packages/certification",
+        "packages/workflow",
     ]
     cmd = [ruff, "check", *targets]
     code, output = run_command(cmd, root)
@@ -190,6 +204,10 @@ def _step_typecheck(root: Path) -> StepResult:
         "packages/tools",
         "packages/precode",
         "packages/develop",
+        "packages/verification",
+        "packages/delta",
+        "packages/certification",
+        "packages/workflow",
     ]
     code, output = run_command(cmd, root, env=mypy_env(root))
     return StepResult("typecheck", cmd, code, summarize(output), code == 0, False)
@@ -223,6 +241,10 @@ def _step_build(root: Path) -> StepResult:
         "packages/tools",
         "packages/precode",
         "packages/develop",
+        "packages/verification",
+        "packages/delta",
+        "packages/certification",
+        "packages/workflow",
         "apps/api/app",
     ]
     missing = [target for target in targets if not (root / target).is_dir()]

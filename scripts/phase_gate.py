@@ -15,9 +15,16 @@ with a machine-readable evidence map. Exit code is ``0`` only for ``PASS``.
 * Phase 4 — tool/control plane: ``smorx_tools`` structure, ``ControlPlane``
   satisfying ``CapabilityGateway``, Phase-4 unit/security/integration suites
   green, ruff+format+mypy clean.
+* Phase 9 — independent verification: ``smorx_verification`` structure,
+  importable verification surface with ``classify_claim`` truth table, joint
+  Phase 9/10 suites green, quality clean.
+* Phase 10 — behavioral delta / intent / certification: ``smorx_delta``
+  structure, BLOCKED-handoff barrier enforced, joint Phase 9/10 suites green,
+  quality clean.
 
 The pure helpers ``structure_checks``, ``finalize_phase0``, ``finalize_phase2``,
-``finalize_phase3``, ``finalize_phase4`` and ``finalize_phase78`` are exported so
+``finalize_phase3``, ``finalize_phase4``, ``finalize_phase78`` and
+``finalize_phase910`` are exported so
 they can be exercised by unit tests without depending on the parallel packages
 landed by other agents.
 """
@@ -117,6 +124,21 @@ PHASE8_PATHS: tuple[str, ...] = (
     "tests/integration/test_phase7_phase8_flow.py",
 )
 
+PHASE9_PATHS: tuple[str, ...] = (
+    "packages/verification/src/smorx_verification",
+    "packages/verification/pyproject.toml",
+    "tests/unit/test_verification_trust.py",
+    "tests/unit/test_verification_wave.py",
+    "tests/integration/test_phase9_phase10_flow.py",
+)
+
+PHASE10_PATHS: tuple[str, ...] = (
+    "packages/delta/src/smorx_delta",
+    "packages/delta/pyproject.toml",
+    "tests/unit/test_delta_core.py",
+    "tests/integration/test_phase9_phase10_flow.py",
+)
+
 _SRC_PATHS: tuple[str, ...] = (
     "packages/contracts/src",
     "packages/behavior/src",
@@ -124,6 +146,8 @@ _SRC_PATHS: tuple[str, ...] = (
     "packages/tools/src",
     "packages/precode/src",
     "packages/develop/src",
+    "packages/verification/src",
+    "packages/delta/src",
 )
 
 PHASE2_TEST_SUITES: tuple[str, ...] = (
@@ -167,6 +191,16 @@ PHASE8_TEST_SUITES: tuple[str, ...] = (
     "tests/integration/test_phase7_phase8_flow.py",
 )
 
+PHASE9_TEST_SUITES: tuple[str, ...] = (
+    "tests/unit/test_verification_trust.py",
+    "tests/unit/test_verification_wave.py",
+)
+
+PHASE10_TEST_SUITES: tuple[str, ...] = (
+    "tests/unit/test_delta_core.py",
+    "tests/integration/test_phase9_phase10_flow.py",
+)
+
 PHASE2_MYPY_TARGETS: tuple[str, ...] = (
     "packages/contracts",
     "packages/behavior",
@@ -184,6 +218,13 @@ PHASE7_MYPY_TARGETS: tuple[str, ...] = ("packages/precode",)
 PHASE8_MYPY_TARGETS: tuple[str, ...] = (
     "packages/precode",
     "packages/develop",
+)
+
+PHASE9_MYPY_TARGETS: tuple[str, ...] = ("packages/verification",)
+
+PHASE10_MYPY_TARGETS: tuple[str, ...] = (
+    "packages/verification",
+    "packages/delta",
 )
 
 _CONTRACT_COUNT = 17
@@ -257,6 +298,10 @@ def _build_mypy_env(root: Path) -> dict[str, str]:
             "packages/agent-runtime/src",
             "packages/behavior/src",
             "packages/tools/src",
+            "packages/precode/src",
+            "packages/develop/src",
+            "packages/verification/src",
+            "packages/delta/src",
         )
     )
     return env
@@ -679,6 +724,184 @@ def _check_phase78_structure(root: Path) -> list[GateCheckResult]:
     return results
 
 
+def _check_phase9_structure(root: Path) -> list[GateCheckResult]:
+    """Verify the Phase-9 module/test home layout; absent paths are failures."""
+    return [
+        GateCheckResult("phase9_structure", (root / rel).exists(), f"present: {rel}")
+        for rel in PHASE9_PATHS
+    ]
+
+
+def _check_phase10_structure(root: Path) -> list[GateCheckResult]:
+    """Verify the Phase-10 module/test home layout; absent paths are failures."""
+    return [
+        GateCheckResult("phase10_structure", (root / rel).exists(), f"present: {rel}")
+        for rel in PHASE10_PATHS
+    ]
+
+
+def _check_phase9_quality(root: Path) -> GateCheckResult:
+    ruff_targets = (
+        "packages/verification",
+        *PHASE9_TEST_SUITES,
+        "tests/integration/test_phase9_phase10_flow.py",
+    )
+    return _check_quality_for(
+        root,
+        ruff_targets=ruff_targets,
+        mypy_targets=PHASE9_MYPY_TARGETS,
+        name="phase9_quality",
+    )
+
+
+def _check_phase10_quality(root: Path) -> GateCheckResult:
+    ruff_targets = ("packages/delta", *PHASE10_TEST_SUITES)
+    return _check_quality_for(
+        root,
+        ruff_targets=ruff_targets,
+        mypy_targets=PHASE10_MYPY_TARGETS,
+        name="phase10_quality",
+    )
+
+
+def _check_phase910_tests(root: Path) -> GateCheckResult:
+    code, output = _run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            *PHASE9_TEST_SUITES,
+            *PHASE10_TEST_SUITES,
+            "-q",
+        ],
+        root,
+        timeout=900,
+    )
+    return GateCheckResult("phase910_tests", code == 0, f"exit={code}: {_tail(output)}")
+
+
+def _check_phase9_imports(root: Path) -> GateCheckResult:
+    """Verify the Phase-9 verification surface imports (in-process)."""
+    del root
+    try:
+        required = {
+            "smorx_verification.contracts": ("VerificationResult", "classify_claim"),
+            "smorx_verification.runner": (
+                "VerificationRunConfig",
+                "run_verification_wave",
+            ),
+            "smorx_verification.boundary": (
+                "authorize_verification_actor",
+                "guard_candidate_mutation",
+            ),
+            "smorx_verification.fusion": ("fuse_claim_evidence", "modules_passed"),
+            "smorx_verification.control_center": ("ControlCenterModel",),
+            "smorx_verification.adversarial": (
+                "ADVERSARIAL_CASES",
+                "run_adversarial_scenarios",
+            ),
+            "smorx_verification.static_analysis": ("run_static_analysis",),
+            "smorx_verification.differential": ("run_differential_execution",),
+            "smorx_verification.ghost_replay": ("run_historical_ghost_replay",),
+            "smorx_verification.metamorphic": ("run_metamorphic_checks",),
+            "smorx_verification.mutation": ("run_mutation_testing",),
+        }
+        missing: list[str] = []
+        for module_name, attrs in required.items():
+            module = importlib.import_module(module_name)
+            for attr in attrs:
+                if not hasattr(module, attr):
+                    missing.append(f"{module_name}.{attr}")
+        if missing:
+            return GateCheckResult(
+                "phase9_imports", False, "missing symbols: " + ", ".join(missing)
+            )
+        from smorx_verification.contracts import ClaimAssessment, classify_claim
+
+        expected = (
+            ((1, 0), ClaimAssessment.SUPPORTING),
+            ((0, 1), ClaimAssessment.CONTRADICTING),
+            ((1, 1), ClaimAssessment.CONFLICTING),
+            ((0, 0), ClaimAssessment.INSUFFICIENT),
+        )
+        for (supporting, contradicting), expected_assessment in expected:
+            actual = classify_claim(supporting=supporting, contradicting=contradicting)
+            if actual != expected_assessment:
+                return GateCheckResult(
+                    "phase9_imports",
+                    False,
+                    f"classify_claim({supporting}, {contradicting}) returned "
+                    f"{actual}, expected {expected_assessment}",
+                )
+    except Exception as exc:  # noqa: BLE001 - gate must capture any import failure
+        return GateCheckResult("phase9_imports", False, f"import failed: {exc}")
+    return GateCheckResult(
+        "phase9_imports",
+        True,
+        "verification surface importable; classify_claim truth table ok",
+    )
+
+
+def _check_phase10_imports(root: Path) -> GateCheckResult:
+    """Verify the Phase-10 delta surface imports and the handoff barrier
+    refuses BLOCKED verification results (in-process, no sandbox)."""
+    del root
+    try:
+        required = {
+            "smorx_delta.handoff": ("admit_verification_result", "HandoffBarrierError"),
+            "smorx_delta.deltas": ("compute_behavioral_deltas",),
+            "smorx_delta.intent": ("evaluate_intent_alignment",),
+            "smorx_delta.decision": ("decide_certification", "DecisionCode"),
+            "smorx_delta.repair": ("build_repair_package",),
+            "smorx_delta.repair_loop": ("run_repair_loop",),
+        }
+        missing: list[str] = []
+        for module_name, attrs in required.items():
+            module = importlib.import_module(module_name)
+            for attr in attrs:
+                if not hasattr(module, attr):
+                    missing.append(f"{module_name}.{attr}")
+        if missing:
+            return GateCheckResult(
+                "phase10_imports", False, "missing symbols: " + ", ".join(missing)
+            )
+        import uuid
+
+        from smorx_delta.handoff import HandoffBarrierError, admit_verification_result
+        from smorx_verification.contracts import VerificationResult
+
+        blocked = VerificationResult(
+            candidate_id="phase-gate-probe",
+            verification_plan_id=uuid.uuid4(),
+            plan_version=1,
+            run_id="phase-gate-probe-run",
+            change_id=uuid.uuid4(),
+            task_id=uuid.uuid4(),
+            modules=(),
+            evidence=(),
+            claims={},
+            contradictions=(),
+            state="BLOCKED",
+        )
+        try:
+            admit_verification_result(blocked)
+        except HandoffBarrierError:
+            pass
+        else:
+            return GateCheckResult(
+                "phase10_imports",
+                False,
+                "BLOCKED verification was admitted; Phase 10 must not decide",
+            )
+    except Exception as exc:  # noqa: BLE001 - gate must capture any import failure
+        return GateCheckResult("phase10_imports", False, f"import failed: {exc}")
+    return GateCheckResult(
+        "phase10_imports",
+        True,
+        "delta surface importable; BLOCKED handoff correctly refused",
+    )
+
+
 def _check_phase3_imports(root: Path) -> GateCheckResult:
     """Verify the Phase-3 runtime surface imports (in-process)."""
     del root
@@ -967,6 +1190,68 @@ def evaluate_phase8(root: Path | None = None, *, live: bool = False) -> PhaseGat
     return result
 
 
+def finalize_phase910(
+    checks: Sequence[GateCheckResult], *, started_at: str
+) -> PhaseGateResult:
+    """Shared finalize for the Phase 9/10 gates (same contract, joint suites)."""
+    failures = [f"{check.name}: {check.detail}" for check in checks if not check.passed]
+    return PhaseGateResult(
+        status="PHASE_910_PASS" if not failures else "PHASE_910_BLOCKED",
+        checks=checks,
+        failures=failures,
+        started_at=started_at,
+        finished_at=_utc_now(),
+    )
+
+
+def evaluate_phase9(root: Path | None = None, *, live: bool = False) -> PhaseGateResult:
+    """Evaluate the Phase-9 exit gate (Verify / independent verification).
+
+    PASS requires: structure present, contracts importable, verification
+    surface importable with the ``classify_claim`` truth table, all joint
+    Phase 9/10 suites green, quality clean, env clean.
+    """
+    started_at = _utc_now()
+    base = root.resolve() if root is not None else _repo_root()
+    _ensure_src_paths(base)
+    checks = []
+    checks.extend(_check_phase9_structure(base))
+    checks.append(_check_contracts())
+    checks.append(_check_phase9_imports(base))
+    checks.append(_check_phase910_tests(base))
+    checks.append(_check_phase9_quality(base))
+    checks.append(_check_env())
+    result = finalize_phase910(checks, started_at=started_at)
+    result.phase = "9"
+    result.status = result.status.replace("PHASE_910_", "PHASE_9_")
+    return result
+
+
+def evaluate_phase10(
+    root: Path | None = None, *, live: bool = False
+) -> PhaseGateResult:
+    """Evaluate the Phase-10 exit gate (Decide/Certify + behavioral delta).
+
+    PASS requires: structure present, contracts importable, delta surface
+    importable with the BLOCKED-handoff barrier enforced, all joint Phase 9/10
+    suites green, quality clean, env clean.
+    """
+    started_at = _utc_now()
+    base = root.resolve() if root is not None else _repo_root()
+    _ensure_src_paths(base)
+    checks = []
+    checks.extend(_check_phase10_structure(base))
+    checks.append(_check_contracts())
+    checks.append(_check_phase10_imports(base))
+    checks.append(_check_phase910_tests(base))
+    checks.append(_check_phase10_quality(base))
+    checks.append(_check_env())
+    result = finalize_phase910(checks, started_at=started_at)
+    result.phase = "10"
+    result.status = result.status.replace("PHASE_910_", "PHASE_10_")
+    return result
+
+
 def _print_result(result: PhaseGateResult) -> None:
     print(f"PHASE {result.phase} EXIT GATE")
     for check in result.checks:
@@ -979,12 +1264,12 @@ def _print_result(result: PhaseGateResult) -> None:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Evaluate a phase exit gate (0, 2, 3, or 4)."
+        description="Evaluate a phase exit gate (0, 2, 3, 4, 7, 8, 9, 10)."
     )
     parser.add_argument(
         "--phase",
         type=str,
-        choices=("0", "2", "3", "4", "7", "8"),
+        choices=("0", "2", "3", "4", "7", "8", "9", "10"),
         default="0",
         help="phase gate to evaluate (default: 0)",
     )
@@ -1004,6 +1289,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = evaluate_phase7(live=args.live)
     elif args.phase == "8":
         result = evaluate_phase8(live=args.live)
+    elif args.phase == "9":
+        result = evaluate_phase9(live=args.live)
+    elif args.phase == "10":
+        result = evaluate_phase10(live=args.live)
     else:
         result = evaluate_phase0(live=args.live)
     if args.json:

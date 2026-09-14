@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smorx-verification"
+version = "0.1.0"
+description = "Phase 9 Verification: independent verification lab, trust boundary, six verification modules, evidence collection, claim evidence fusion, control center, VERIFICATION_RESULT contract."
+requires-python = ">=3.11"
+dependencies = [
+    "smorx-contracts",
+    "smorx-behavior",
+    "smorx-runtime",
+    "smorx-tools",
+    "smorx-precode",
+    "smorx-develop",
+]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "ASYNC", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]

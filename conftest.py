@@ -24,6 +24,10 @@ _PYTHON_PATH_ENTRIES = (
     _ROOT / "packages" / "tools" / "src",
     _ROOT / "packages" / "precode" / "src",
     _ROOT / "packages" / "develop" / "src",
+    _ROOT / "packages" / "certification" / "src",
+    _ROOT / "packages" / "workflow" / "src",
+    _ROOT / "packages" / "verification" / "src",
+    _ROOT / "packages" / "delta" / "src",
     _ROOT / "scripts",
 )
 
