@@ -21,7 +21,7 @@ jobs:
         shell: bash
         run: |
           python -m pip install --upgrade pip
-          pip install -e packages/contracts -e packages/agent-runtime -e packages/behavior -e packages/tools -e packages/verification -e packages/delta
+          pip install -e packages/contracts -e packages/agent-runtime -e packages/behavior -e packages/tools -e packages/verification -e packages/delta -e packages/certification -e packages/workflow
           pip install ruff mypy pytest pytest-asyncio pydantic pydantic-settings
 
       - name: Environment validation
@@ -38,7 +38,7 @@ jobs:
 
       - name: Type check
         shell: bash
-        run: mypy packages/contracts packages/agent-runtime packages/behavior packages/tools packages/verification packages/delta
+        run: mypy packages/contracts packages/agent-runtime packages/behavior packages/tools packages/verification packages/delta packages/certification packages/workflow
 
       - name: Unit tests
         shell: bash
@@ -64,7 +64,7 @@ jobs:
         shell: bash
         run: python scripts/audit_deps.py
 
-      - name: Phase gates (0, 2, 3, 4, 9, 10)
+      - name: Phase gates (0, 2, 3, 4, 9, 10, 11, 12)
         shell: bash
         run: |
           python scripts/phase_gate.py --phase 0
@@ -73,3 +73,5 @@ jobs:
           python scripts/phase_gate.py --phase 4
           python scripts/phase_gate.py --phase 9
           python scripts/phase_gate.py --phase 10
+          python scripts/phase_gate.py --phase 11
+          python scripts/phase_gate.py --phase 12

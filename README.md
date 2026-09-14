@@ -54,6 +54,16 @@ packages/delta/         Phase 10 Verify to Decide (module smorx_delta): handoff 
                         Patch #2 with the original preserved untouched, deterministic
                         behavioral-delta classification, intent alignment, decision
                         gates with allow_merge, and an evidence-bound repair loop.
+packages/certification/ Phase 11 Certification (module smorx_certification):
+                        intent-alignment evaluation, independent re-verification
+                        (evidence port), certificate generation with integrity hash,
+                        failure archaeology, behavioral memory pipeline, and the
+                        merge gate that only authorizes MERGED on real evidence.
+packages/workflow/      Phase 12 Workflow + Demo Reliability (module smorx_workflow):
+                        E2E orchestration driver over the AUTH-017 demo scenario,
+                        hash-chained run events, state replay with tamper detection,
+                        ten-mode failure injection, and demo reliability (resume,
+                        reset, stale-sandbox cleanup, idempotency guards).
 packages/ui/            Reserved (required by the structure gate; not yet created).
 scripts/                quality_gate.py, phase_gate.py, env_check.py, validate_env.py,
                         scan_secrets.py, audit_deps.py, verify_migration.py.
@@ -166,6 +176,30 @@ infrastructure/nebius/  Planned (referenced by the structure gate; reference
   context -> handoff -> barrier -> sandbox -> fail -> diagnose -> repair ->
   passing candidate -> trace integrity) runs against real database rows and
   real subprocess executions in `tests/integration/test_phase7_phase8_flow.py`.
+- **Phase 11 - Certification** (`packages/certification`, module
+  `smorx_certification`): intent-alignment evaluation that is structurally
+  distinct from behavioral delta (security-critical or protected behaviors
+  must be covered by authorized intent), independent re-verification as an
+  evidence port (BLOCKED on missing evidence, never fabricated), certificate
+  generation whose integrity hash binds the certificate to its canonical
+  payload over real rows (tampering breaks integrity), failure archaeology
+  (failure is preserved as behavioral memory), the behavioral memory pipeline
+  (closes the loop), and the merge gate that authorizes MERGED only when the
+  candidate is verified, the certificate is certified and integrity-intact,
+  alignment is certifiable, and every protected behavior is authorized - it
+  degrades to ``allowed=False`` when the integrity import is unavailable
+  instead of raising. Gate: `PHASE_11_PASS`.
+- **Phase 12 - Workflow + Demo Reliability** (`packages/workflow`, module
+  `smorx_workflow`): the end-to-end orchestration driver over the real
+  AUTH-017 demo scenario (12 ordered phases with hash-chained, run-bound
+  ConsequentialEvent records), deterministic-evidence caching (idempotent),
+  state replay with hash-chain validation (tamper detection, expected-hash
+  matching), run-scoped event ordering, ten-mode failure injection (real
+  Execution/Failure/Evidence rows, idempotent re-injection, no-progress
+  triple-failure fingerprint), and demo reliability: idempotency guards,
+  resume-from-verified-chain (refuses tampered chains and out-of-segment
+  targets), policy-gated reset, and stale-sandbox cleanup. Gate:
+  `PHASE_12_PASS`.
 
 ## Setup
 
@@ -175,12 +209,13 @@ Requirements: Python 3.11.
 python -m venv .venv
 .venv\Scripts\activate                    # Windows
 source .venv/bin/activate                 # POSIX
-pip install -e packages/contracts packages/behavior packages/agent-runtime packages/tools packages/precode packages/develop packages/verification packages/delta
+pip install -e packages/contracts packages/behavior packages/agent-runtime packages/tools packages/precode packages/develop packages/verification packages/delta packages/certification packages/workflow
 ```
 
 The editable packages are `smorx-contracts`, `smorx-behavior`,
 `smorx-runtime`, `smorx-tools`, `smorx-precode`, `smorx-develop`,
-`smorx-verification`, and `smorx-delta` (each declared in its
+`smorx-verification`, `smorx-delta`, `smorx-certification`, and
+`smorx-workflow` (each declared in its
 `pyproject.toml`).
 The API service keeps its own virtualenv under `apps/api/.venv`.
 
@@ -205,30 +240,36 @@ python scripts/phase_gate.py --phase 7
 python scripts/phase_gate.py --phase 8
 python scripts/phase_gate.py --phase 9
 python scripts/phase_gate.py --phase 10
+python scripts/phase_gate.py --phase 11
+python scripts/phase_gate.py --phase 12
 ```
 
-The gate CLI supports phases 0, 2, 3, 4, 7, 8, 9 and 10 and emits
+The gate CLI supports phases 0, 2, 3, 4, 7, 8, 9, 10, 11 and 12 and emits
 `PHASE_N_PASS` or `PHASE_N_BLOCKED` with a machine-readable evidence map (exit
 code 0 only for PASS). Phase 3 and Phase 4 were gated both through their
 dedicated end-to-end runs (`PHASE3_GATE: PASS`, `PHASE4_GATE: PASS`) and
 through the machine gate: `python scripts/phase_gate.py --phase 3` →
 `PHASE_3_PASS`, `python scripts/phase_gate.py --phase 4` → `PHASE_4_PASS`.
-Phases 7 and 8 gate as `PHASE_7_PASS` / `PHASE_8_PASS`, and phases 9 and 10
-gate as `PHASE_9_PASS` / `PHASE_10_PASS`.
+Phases 7 and 8 gate as `PHASE_7_PASS` / `PHASE_8_PASS`, phases 9 and 10
+gate as `PHASE_9_PASS` / `PHASE_10_PASS`, and phases 11 and 12 gate as
+`PHASE_11_PASS` / `PHASE_12_PASS`.
 
 ## Tests
 
-Current full suite (Phase 7/8 completion state):
+Current full suite (Phase 11/12 completion state):
 
 ```bash
-python -m pytest tests/unit tests/integration tests/security   # 516 passed
+python -m pytest tests/unit tests/integration tests/security   # 653 passed
 ```
 
-- Unit: 451 tests.
-- Integration: 27 tests (Phase 3/4 trust chain, lifecycle/certificate/reference,
-  and the combined Phase 7->8 flow).
+- Unit: 597 tests.
+- Integration: 29 tests (Phase 3/4 trust chain, lifecycle/certificate/reference,
+  Phase 7->8 flow, and Phase 9/10 verify-to-decision flow).
 - Security: 27 adversarial scenarios (the 20-scenario Phase 3/4 suite plus the
   7-scenario Phase 7 pre-coding suite).
+- Phase 11/12 targeted run: **47 passed** (8 orchestrate, 10 replay, 11
+  reliability, 9 failure inject, 9 merge gate) over real certification and
+  workflow modules with no fakes or stubs.
 - Phase 9/10 targeted run: **85 passed** (17 phase-gate contract tests, 28
   verification trust, 17 verification wave, 21 delta core, 2 integration
   flow), covering the real six-module verification wave and the

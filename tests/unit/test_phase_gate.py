@@ -221,3 +221,50 @@ def test_evaluate_phase10_smoke_repo_root() -> None:
 
     assert isinstance(result, phase_gate.PhaseGateResult)
     assert result.status in ("PHASE_10_PASS", "PHASE_10_BLOCKED")
+
+
+def test_finalize_phase1112_all_pass_is_pass() -> None:
+    checks = [
+        phase_gate.GateCheckResult("phase11_structure", True, "present"),
+        phase_gate.GateCheckResult("phase11_imports", True, "surface importable"),
+        phase_gate.GateCheckResult("phase1112_tests", True, "exit=0"),
+    ]
+
+    result = phase_gate.finalize_phase1112(
+        checks, started_at="2026-01-01T00:00:00+00:00"
+    )
+
+    assert result.status == "PHASE_1112_PASS"
+    assert result.failures == []
+
+
+def test_finalize_phase1112_any_failure_blocks() -> None:
+    checks = [
+        phase_gate.GateCheckResult("phase12_imports", True, "ok"),
+        phase_gate.GateCheckResult("phase12_quality", False, "ruff exit=1"),
+    ]
+
+    result = phase_gate.finalize_phase1112(
+        checks, started_at="2026-01-01T00:00:00+00:00"
+    )
+
+    assert result.status == "PHASE_1112_BLOCKED"
+    assert result.failures == ["phase12_quality: ruff exit=1"]
+
+
+def test_evaluate_phase11_smoke_repo_root() -> None:
+    pytest.importorskip("smorx_certification")
+
+    result = phase_gate.evaluate_phase11(root=phase_gate._repo_root(), live=False)
+
+    assert isinstance(result, phase_gate.PhaseGateResult)
+    assert result.status in ("PHASE_11_PASS", "PHASE_11_BLOCKED")
+
+
+def test_evaluate_phase12_smoke_repo_root() -> None:
+    pytest.importorskip("smorx_workflow")
+
+    result = phase_gate.evaluate_phase12(root=phase_gate._repo_root(), live=False)
+
+    assert isinstance(result, phase_gate.PhaseGateResult)
+    assert result.status in ("PHASE_12_PASS", "PHASE_12_BLOCKED")

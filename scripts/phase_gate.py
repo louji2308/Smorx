@@ -1,6 +1,6 @@
 """Machine-executable phase gates for the Software Evolution Intelligence System.
 
-    python scripts/phase_gate.py [--phase 0|2|3|4|7|8] [--live] [--json]
+    python scripts/phase_gate.py [--phase 0|2|3|4|7|8|9|10|11|12] [--live] [--json]
 
 Evaluates a phase exit gate and emits ``PHASE_N_PASS`` or ``PHASE_N_BLOCKED``
 with a machine-readable evidence map. Exit code is ``0`` only for ``PASS``.
@@ -21,10 +21,16 @@ with a machine-readable evidence map. Exit code is ``0`` only for ``PASS``.
 * Phase 10 — behavioral delta / intent / certification: ``smorx_delta``
   structure, BLOCKED-handoff barrier enforced, joint Phase 9/10 suites green,
   quality clean.
+* Phase 11 — certification: ``smorx_certification`` structure, certification
+  surface importable (alignment/reverify/merge-gate/integrity/memory/
+  archaeology), joint Phase 11/12 suites green, quality clean.
+* Phase 12 — workflow: ``smorx_workflow`` structure, workflow surface
+  importable (orchestrate/chaining/replay/reliability/failure-inject), joint
+  Phase 11/12 suites green, quality clean.
 
 The pure helpers ``structure_checks``, ``finalize_phase0``, ``finalize_phase2``,
-``finalize_phase3``, ``finalize_phase4``, ``finalize_phase78`` and
-``finalize_phase910`` are exported so
+``finalize_phase3``, ``finalize_phase4``, ``finalize_phase78``,
+``finalize_phase910`` and ``finalize_phase1112`` are exported so
 they can be exercised by unit tests without depending on the parallel packages
 landed by other agents.
 """
@@ -139,6 +145,24 @@ PHASE10_PATHS: tuple[str, ...] = (
     "tests/integration/test_phase9_phase10_flow.py",
 )
 
+PHASE11_PATHS: tuple[str, ...] = (
+    "packages/certification/src/smorx_certification",
+    "packages/certification/pyproject.toml",
+    "tests/unit/test_certification_archaeology.py",
+    "tests/unit/test_certification_memory.py",
+    "tests/unit/test_certification_merge_gate.py",
+)
+
+PHASE12_PATHS: tuple[str, ...] = (
+    "packages/workflow/src/smorx_workflow",
+    "packages/workflow/pyproject.toml",
+    "tests/unit/test_workflow_orchestrate.py",
+    "tests/unit/test_workflow_replay.py",
+    "tests/unit/test_workflow_reliability.py",
+    "tests/unit/test_workflow_failure_inject.py",
+    "tests/unit/workflow_helpers.py",
+)
+
 _SRC_PATHS: tuple[str, ...] = (
     "packages/contracts/src",
     "packages/behavior/src",
@@ -148,6 +172,8 @@ _SRC_PATHS: tuple[str, ...] = (
     "packages/develop/src",
     "packages/verification/src",
     "packages/delta/src",
+    "packages/certification/src",
+    "packages/workflow/src",
 )
 
 PHASE2_TEST_SUITES: tuple[str, ...] = (
@@ -201,6 +227,20 @@ PHASE10_TEST_SUITES: tuple[str, ...] = (
     "tests/integration/test_phase9_phase10_flow.py",
 )
 
+PHASE11_TEST_SUITES: tuple[str, ...] = (
+    "tests/unit/test_certification_archaeology.py",
+    "tests/unit/test_certification_memory.py",
+    "tests/unit/test_certification_merge_gate.py",
+)
+
+PHASE12_TEST_SUITES: tuple[str, ...] = (
+    "tests/unit/test_workflow_orchestrate.py",
+    "tests/unit/test_workflow_replay.py",
+    "tests/unit/test_workflow_reliability.py",
+    "tests/unit/test_workflow_failure_inject.py",
+    "tests/unit/test_certification_merge_gate.py",
+)
+
 PHASE2_MYPY_TARGETS: tuple[str, ...] = (
     "packages/contracts",
     "packages/behavior",
@@ -225,6 +265,13 @@ PHASE9_MYPY_TARGETS: tuple[str, ...] = ("packages/verification",)
 PHASE10_MYPY_TARGETS: tuple[str, ...] = (
     "packages/verification",
     "packages/delta",
+)
+
+PHASE11_MYPY_TARGETS: tuple[str, ...] = ("packages/certification",)
+
+PHASE12_MYPY_TARGETS: tuple[str, ...] = (
+    "packages/certification",
+    "packages/workflow",
 )
 
 _CONTRACT_COUNT = 17
@@ -302,6 +349,8 @@ def _build_mypy_env(root: Path) -> dict[str, str]:
             "packages/develop/src",
             "packages/verification/src",
             "packages/delta/src",
+            "packages/certification/src",
+            "packages/workflow/src",
         )
     )
     return env
@@ -740,6 +789,22 @@ def _check_phase10_structure(root: Path) -> list[GateCheckResult]:
     ]
 
 
+def _check_phase11_structure(root: Path) -> list[GateCheckResult]:
+    """Verify the Phase-11 module/test home layout; absent paths are failures."""
+    return [
+        GateCheckResult("phase11_structure", (root / rel).exists(), f"present: {rel}")
+        for rel in PHASE11_PATHS
+    ]
+
+
+def _check_phase12_structure(root: Path) -> list[GateCheckResult]:
+    """Verify the Phase-12 module/test home layout; absent paths are failures."""
+    return [
+        GateCheckResult("phase12_structure", (root / rel).exists(), f"present: {rel}")
+        for rel in PHASE12_PATHS
+    ]
+
+
 def _check_phase9_quality(root: Path) -> GateCheckResult:
     ruff_targets = (
         "packages/verification",
@@ -764,6 +829,30 @@ def _check_phase10_quality(root: Path) -> GateCheckResult:
     )
 
 
+def _check_phase11_quality(root: Path) -> GateCheckResult:
+    ruff_targets = ("packages/certification", *PHASE11_TEST_SUITES)
+    return _check_quality_for(
+        root,
+        ruff_targets=ruff_targets,
+        mypy_targets=PHASE11_MYPY_TARGETS,
+        name="phase11_quality",
+    )
+
+
+def _check_phase12_quality(root: Path) -> GateCheckResult:
+    ruff_targets = (
+        "packages/certification",
+        "packages/workflow",
+        *PHASE12_TEST_SUITES,
+    )
+    return _check_quality_for(
+        root,
+        ruff_targets=ruff_targets,
+        mypy_targets=PHASE12_MYPY_TARGETS,
+        name="phase12_quality",
+    )
+
+
 def _check_phase910_tests(root: Path) -> GateCheckResult:
     code, output = _run(
         [
@@ -778,6 +867,22 @@ def _check_phase910_tests(root: Path) -> GateCheckResult:
         timeout=900,
     )
     return GateCheckResult("phase910_tests", code == 0, f"exit={code}: {_tail(output)}")
+
+
+def _check_phase1112_tests(root: Path) -> GateCheckResult:
+    code, output = _run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            *PHASE11_TEST_SUITES,
+            *PHASE12_TEST_SUITES,
+            "-q",
+        ],
+        root,
+        timeout=900,
+    )
+    return GateCheckResult("phase1112_tests", code == 0, f"exit={code}: {_tail(output)}")
 
 
 def _check_phase9_imports(root: Path) -> GateCheckResult:
@@ -899,6 +1004,98 @@ def _check_phase10_imports(root: Path) -> GateCheckResult:
         "phase10_imports",
         True,
         "delta surface importable; BLOCKED handoff correctly refused",
+    )
+
+
+def _check_phase11_imports(root: Path) -> GateCheckResult:
+    """Verify the Phase-11 certification surface imports (in-process)."""
+    del root
+    try:
+        required = {
+            "smorx_certification.alignment": ("evaluate_alignment", "AlignmentVerdict"),
+            "smorx_certification.reverify": (
+                "run_reverification",
+                "ReVerificationReport",
+            ),
+            "smorx_certification.merge_gate": (
+                "evaluate_merge_gate",
+                "MergeGateVerdict",
+            ),
+            "smorx_certification.certificate": ("build_certificate",),
+            "smorx_certification.archaeology": ("persist_archaeology",),
+            "smorx_certification.memory": ("run_memory_pipeline",),
+            "smorx_certification.integrity": (
+                "canonical_certificate_payload",
+                "compute_integrity_hash",
+            ),
+        }
+        missing: list[str] = []
+        for module_name, attrs in required.items():
+            module = importlib.import_module(module_name)
+            for attr in attrs:
+                if not hasattr(module, attr):
+                    missing.append(f"{module_name}.{attr}")
+        if missing:
+            return GateCheckResult(
+                "phase11_imports", False, "missing symbols: " + ", ".join(missing)
+            )
+    except Exception as exc:  # noqa: BLE001 - gate must capture any import failure
+        return GateCheckResult("phase11_imports", False, f"import failed: {exc}")
+    return GateCheckResult(
+        "phase11_imports", True, "certification surface importable"
+    )
+
+
+def _check_phase12_imports(root: Path) -> GateCheckResult:
+    """Verify the Phase-12 workflow surface imports (in-process)."""
+    del root
+    try:
+        required = {
+            "smorx_workflow.orchestrate": (
+                "workflow_id",
+                "DEFAULT_PHASES",
+                "PHASE_EVENT_KINDS",
+                "build_demo_scenario",
+                "run_e2e_workflow",
+                "run_phases",
+            ),
+            "smorx_workflow.chaining": (
+                "canonical_payload",
+                "event_digest",
+                "next_sequence",
+            ),
+            "smorx_workflow.replay": (
+                "ordered_events",
+                "replay_from_evidence_graph",
+                "ReplayResult",
+            ),
+            "smorx_workflow.reliability": (
+                "idempotency_guard",
+                "cleanup_stale_sandboxes",
+                "resume_workflow",
+                "reset_workflow",
+                "ReliabilityReport",
+            ),
+            "smorx_workflow.failure_inject": (
+                "inject_failure",
+                "FailureInjectionMode",
+                "InjectionResult",
+            ),
+        }
+        missing: list[str] = []
+        for module_name, attrs in required.items():
+            module = importlib.import_module(module_name)
+            for attr in attrs:
+                if not hasattr(module, attr):
+                    missing.append(f"{module_name}.{attr}")
+        if missing:
+            return GateCheckResult(
+                "phase12_imports", False, "missing symbols: " + ", ".join(missing)
+            )
+    except Exception as exc:  # noqa: BLE001 - gate must capture any import failure
+        return GateCheckResult("phase12_imports", False, f"import failed: {exc}")
+    return GateCheckResult(
+        "phase12_imports", True, "workflow surface importable"
     )
 
 
@@ -1252,6 +1449,69 @@ def evaluate_phase10(
     return result
 
 
+def finalize_phase1112(
+    checks: Sequence[GateCheckResult], *, started_at: str
+) -> PhaseGateResult:
+    """Shared finalize for the Phase 11/12 gates (same contract, joint suites)."""
+    failures = [f"{check.name}: {check.detail}" for check in checks if not check.passed]
+    return PhaseGateResult(
+        status="PHASE_1112_PASS" if not failures else "PHASE_1112_BLOCKED",
+        checks=checks,
+        failures=failures,
+        started_at=started_at,
+        finished_at=_utc_now(),
+    )
+
+
+def evaluate_phase11(
+    root: Path | None = None, *, live: bool = False
+) -> PhaseGateResult:
+    """Evaluate the Phase-11 exit gate (Certify / certification bindings).
+
+    PASS requires: structure present, contracts importable, certification
+    surface importable, all joint Phase 11/12 suites green, quality clean,
+    env clean.
+    """
+    started_at = _utc_now()
+    base = root.resolve() if root is not None else _repo_root()
+    _ensure_src_paths(base)
+    checks = []
+    checks.extend(_check_phase11_structure(base))
+    checks.append(_check_contracts())
+    checks.append(_check_phase11_imports(base))
+    checks.append(_check_phase1112_tests(base))
+    checks.append(_check_phase11_quality(base))
+    checks.append(_check_env())
+    result = finalize_phase1112(checks, started_at=started_at)
+    result.phase = "11"
+    result.status = result.status.replace("PHASE_1112_", "PHASE_11_")
+    return result
+
+
+def evaluate_phase12(
+    root: Path | None = None, *, live: bool = False
+) -> PhaseGateResult:
+    """Evaluate the Phase-12 exit gate (workflow / orchestrated journey).
+
+    PASS requires: structure present, contracts importable, workflow surface
+    importable, all joint Phase 11/12 suites green, quality clean, env clean.
+    """
+    started_at = _utc_now()
+    base = root.resolve() if root is not None else _repo_root()
+    _ensure_src_paths(base)
+    checks = []
+    checks.extend(_check_phase12_structure(base))
+    checks.append(_check_contracts())
+    checks.append(_check_phase12_imports(base))
+    checks.append(_check_phase1112_tests(base))
+    checks.append(_check_phase12_quality(base))
+    checks.append(_check_env())
+    result = finalize_phase1112(checks, started_at=started_at)
+    result.phase = "12"
+    result.status = result.status.replace("PHASE_1112_", "PHASE_12_")
+    return result
+
+
 def _print_result(result: PhaseGateResult) -> None:
     print(f"PHASE {result.phase} EXIT GATE")
     for check in result.checks:
@@ -1264,12 +1524,12 @@ def _print_result(result: PhaseGateResult) -> None:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Evaluate a phase exit gate (0, 2, 3, 4, 7, 8, 9, 10)."
+        description="Evaluate a phase exit gate (0, 2, 3, 4, 7, 8, 9, 10, 11, 12)."
     )
     parser.add_argument(
         "--phase",
         type=str,
-        choices=("0", "2", "3", "4", "7", "8", "9", "10"),
+        choices=("0", "2", "3", "4", "7", "8", "9", "10", "11", "12"),
         default="0",
         help="phase gate to evaluate (default: 0)",
     )
@@ -1293,6 +1553,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = evaluate_phase9(live=args.live)
     elif args.phase == "10":
         result = evaluate_phase10(live=args.live)
+    elif args.phase == "11":
+        result = evaluate_phase11(live=args.live)
+    elif args.phase == "12":
+        result = evaluate_phase12(live=args.live)
     else:
         result = evaluate_phase0(live=args.live)
     if args.json:
