@@ -271,3 +271,27 @@ Await user: (1) `SUPABASE_DATABASE_URL` for real-PostgreSQL migration verificati
 
 ## Next Action
 Ask user for Nebius credentials; then run real integration tests + E2E proof; write docs (README UTF-8 rewrite, `docs/phase1-infrastructure.md`); phase-gate report.
+
+---
+
+## Post-restart Full-Stack + Browser Verification (2026-09-14) — WEB RESTART + LIVE CDP EVIDENCE
+- Context: Phase 11/12 committed as `9f77b96` (`feat(workflow): finalize phase 11/12 gate infrastructure`). `apps/web` changes kept uncommitted (parallel session). Full-stack was restarted cleanly and verified live in headless Chrome, server-side active-tab state → UI.
+
+## Restart Evidence
+- API: `apps/api/run_server.ps1` (uvicorn, port 8099) restarted; pid 24416 (listening pid); `/health` → 200 `{"status":"ok"}`.
+- Web: `npm run dev` on port 3000 with `API_BASE_URL=http://127.0.0.1:8099`; Next.js 15.5.25 "Ready in 37.3s"; proxy `/api/health` → 200 `{"status":"ok"}`.
+- Chrome: headless CDP on 9222 (Chrome/152.0.7977.84), navigated to `http://localhost:3000`, title "Smorx — Software Evolution Intelligence System".
+
+## Stale-State Investigation
+- Persisted zustand state (`smorx-app-state`) held `currentStage:"Govern"`, `completedStages:["Discover","Govern"]`, `trustStatus:"PROTECTED"` while UI showed `activeTab:"Discover"` and no `Proceed to Define` — a state/UI mismatch from pre-restart play.
+- Resolution: removed the persisted key via CDP and reloaded → clean initial state `currentStage:"Discover"`, `completedStages:[]`, `trustStatus:"HISTORICAL"`, only Discover enabled. Milestone confirmed via `cdp-diagnose.mjs` (Proceed-to-Define NOT FOUND, Discover active) — expected, not a regression.
+
+## Live Journey Evidence (cdp-journey2 + cdp-final + cdp-govern-check + cdp-reactivate)
+- Discover: initial (Discover enabled; Govern…Certify + Back disabled) → `Run Software Archaeology` → Trust HISTORICAL→OBSERVED, Govern unlocked, Stage metric = Discover.
+- Govern: workspace → `Activate Constitution` → activation screen (readiness 4/5, "Human approval required LOCKED") → activate → `Constitution Ratified` (readiness 5/5), Trust OBSERVED→PROTECTED, `Proceed to Define` appears, Define unlocked.
+- Define: placeholder renders; Analyze/Develop/Verify/Decide/Certify stay correctly disabled (stage-lock works).
+- Persistence: reload → store retains `currentStage:"Govern"`, `completedStages:["Discover","Govern"]`, `trustStatus:"PROTECTED"`; on the ratified view `Proceed to Define` is reachable (activation click is idempotent, 4/5→5/5 readiness reflects the human-approval gate).
+- Runtime health: 0 exceptions, 0 bad responses, 0 network failures across all interactions; only console noise = 2× React DevTools dev-mode info; `/favicon.ico` 404 harmless. Screenshots in `%TEMP%\opencode\shots-journey\*.png` + `shot-govern-ratified.png`.
+
+## Notes
+- Chrome DevTools MCP was configured but not connected this session; raw CDP fallback used for evidence. State-lock wiring (`Navigation.tsx` `isTabAvailable`) is authoritative per source inspection + gate tests.
