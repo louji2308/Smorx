@@ -86,4 +86,34 @@ export const api = {
 
   sandboxTest: (data: { repo_url: string; test_command?: string; branch?: string }) =>
     apiFetch<{ sandbox_id: string; status: string; exit_code: number; stdout: string; stderr: string; duration: number }>('/api/workflow/sandbox/test', { method: 'POST', body: JSON.stringify(data) }),
+
+  runAgent: (data: { task_id: string; repo_url: string; change_id: string }) => {
+    return new EventSource(
+      `${API_BASE}/api/workflow/agent/run?task_id=${data.task_id}&repo_url=${encodeURIComponent(data.repo_url)}&change_id=${data.change_id}`
+    );
+  },
+
+  runAgentStream: async function*(data: { task_id: string; repo_url: string; change_id: string }) {
+    const response = await fetch(`${API_BASE}/api/workflow/agent/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const reader = response.body?.getReader();
+    if (!reader) return;
+    const decoder = new TextDecoder();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const text = decoder.decode(value);
+      const lines = text.split('\n').filter(l => l.startsWith('data: '));
+      for (const line of lines) {
+        const data = line.slice(6);
+        if (data === '[DONE]') return;
+        try {
+          yield JSON.parse(data);
+        } catch {}
+      }
+    }
+  },
 };

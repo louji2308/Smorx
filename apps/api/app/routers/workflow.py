@@ -1,9 +1,12 @@
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+import json
+import asyncio
 from ..database import get_supabase
-from ..clients.nvidia import extract_intents, analyze_impact, generate_verification_plan, make_decision
+from ..clients.agent import AgentOrchestrator
 from ..clients.github import get_repo_analysis
-from ..clients.nebius import execute_in_sandbox, clone_and_analyze, run_tests
+from ..clients.nebius import execute_in_sandbox
 from urllib.parse import urlparse
 
 router = APIRouter(prefix="/api/workflow", tags=["workflow"])
@@ -64,36 +67,41 @@ async def start_workflow(req: StartWorkflowRequest):
     }).execute()
     constitution = constitution_result.data[0]
 
-    context = f"Repository: {analysis['name']}\nLanguages: {', '.join(analysis.get('languages', {}).keys())}\nFiles: {analysis.get('file_count', 0)}\nDirectories: {', '.join(analysis.get('directories', [])[:20])}"
-
-    intents = await extract_intents(context, req.change_description or req.change_title)
-    for intent in intents:
-        db.table("claims").insert({
-            "statement": intent["statement"],
-            "kind": intent["kind"],
-            "status": "observed",
-            "confidence": 0.7,
-        }).execute()
-
-    impact = await analyze_impact(context, intents)
-    for surface in impact.get("surfaces", []):
-        db.table("behaviors").insert({
-            "repository_id": repo["id"],
-            "name": surface["path"],
-            "description": f"{surface['direction']} by change",
-            "category": "semantic_impact",
-            "protected": surface["risk"] == "high",
-        }).execute()
-
     return {
         "project": project,
         "repository": repo,
         "change": change,
         "constitution": constitution,
         "analysis": analysis,
-        "intents": intents,
-        "impact": impact,
     }
+
+class RunAgentRequest(BaseModel):
+    task_id: str
+    repo_url: str
+    change_id: str
+
+@router.post("/agent/run")
+async def run_agent(req: RunAgentRequest):
+    orchestrator = AgentOrchestrator(
+        task_id=req.task_id,
+        repo_url=req.repo_url,
+        change_id=req.change_id,
+    )
+
+    async def event_stream():
+        async for event in orchestrator.run():
+            yield f"data: {json.dumps(event, default=str)}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 class SandboxExecuteRequest(BaseModel):
     repo_url: str
@@ -120,7 +128,8 @@ class SandboxTestRequest(BaseModel):
 @router.post("/sandbox/test")
 async def sandbox_test(req: SandboxTestRequest):
     try:
-        result = await run_tests(req.repo_url, req.test_command, req.branch)
+        test_cmd = f"cd /tmp && git clone --depth 1 -b {req.branch} {req.repo_url} repo && cd repo && {req.test_command}"
+        result = await execute_in_sandbox(test_cmd)
         db = get_supabase()
         db.table("executions").insert({
             "kind": "test",

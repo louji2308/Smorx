@@ -14,6 +14,9 @@ from .nvidia import (
     analyze_impact,
     generate_verification_plan,
     make_decision,
+    classify_task_complexity,
+    get_model_for_task,
+    smart_chat_completion,
 )
 from .nebius import (
     whoami,
@@ -25,3 +28,11 @@ from .nebius import (
     run_tests,
     apply_patch_and_test,
 )
+from .evidence import (
+    compute_hash,
+    collect_execution_evidence,
+    collect_test_evidence,
+    fuse_claim_evidence,
+    calculate_behavioral_delta,
+)
+from .agent import AgentOrchestrator

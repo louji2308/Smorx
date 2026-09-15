@@ -4,7 +4,12 @@ from .config import settings
 
 NVIDIA_API = "https://integrate.api.nvidia.com/v1"
 
-async def chat_completion(messages: list[dict], temperature: float = 0.3, max_tokens: int = 4096) -> str:
+async def chat_completion(
+    messages: list[dict],
+    temperature: float = 0.3,
+    max_tokens: int = 4096,
+    model: str | None = None,
+) -> str:
     async with httpx.AsyncClient(timeout=120) as client:
         resp = await client.post(
             f"{NVIDIA_API}/chat/completions",
@@ -13,7 +18,7 @@ async def chat_completion(messages: list[dict], temperature: float = 0.3, max_to
                 "Content-Type": "application/json",
             },
             json={
-                "model": settings.nvidia_model,
+                "model": model or settings.nvidia_model,
                 "messages": messages,
                 "temperature": temperature,
                 "max_tokens": max_tokens,
@@ -139,3 +144,115 @@ Return ONLY valid JSON, no markdown."""
         return json.loads(response)
     except json.JSONDecodeError:
         return {"verdict": "conditional", "confidence": 0.7, "rationale": "Decision could not be parsed", "next_action": "Review manually"}
+
+
+# ─── Model Routing System ───────────────────────────────────────────────────────
+# Routes tasks to the appropriate Nemotron variant based on complexity.
+
+MODEL_LIGHTNING = "nvidia/llama-3.1-nemotron-3.5-lightning-30b-a3b"
+MODEL_SUPER = "nvidia/llama-3.1-nemotron-3-super-120b"
+MODEL_ULTRA = "nvidia/llama-3.1-nemotron-3-ultra-550b"
+
+
+async def classify_task_complexity(task_description: str, context: str) -> str:
+    """Use Nemotron Lightning to classify task complexity as simple, normal, or hard.
+
+    Returns one of: "simple", "normal", "hard".
+    """
+    prompt = f"""Classify the complexity of the following task. Return ONLY a JSON object with two keys:
+- "complexity": one of "simple", "normal", or "hard"
+- "reason": a brief explanation of why
+
+RULES:
+- "simple": repo summary, file identification, command interpretation, single-line edits, straightforward lookups.
+- "normal": coding decisions, debugging, multi-file reasoning, refactoring, API integrations, moderate architectural choices.
+- "hard": difficult root-cause analysis, architectural changes, ambiguous failures, cross-system reasoning, final synthesis, security-critical decisions.
+
+TASK:
+{task_description}
+
+CONTEXT:
+{context[:2000]}
+
+Return ONLY valid JSON, no markdown."""
+
+    response = await chat_completion(
+        [{"role": "user", "content": prompt}],
+        model=MODEL_LIGHTNING,
+        temperature=0.1,
+        max_tokens=256,
+    )
+    try:
+        cleaned = response.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("```")[1]
+            if cleaned.startswith("json"):
+                cleaned = cleaned[4:]
+        parsed = json.loads(cleaned)
+        complexity = parsed.get("complexity", "normal")
+        if complexity not in ("simple", "normal", "hard"):
+            return "normal"
+        return complexity
+    except (json.JSONDecodeError, AttributeError):
+        return "normal"
+
+
+def get_model_for_task(complexity: str) -> str:
+    """Map a complexity level to the corresponding Nemotron model ID."""
+    routing_table = {
+        "simple": MODEL_LIGHTNING,
+        "normal": MODEL_SUPER,
+        "hard": MODEL_ULTRA,
+    }
+    return routing_table.get(complexity, MODEL_SUPER)
+
+
+async def smart_chat_completion(
+    messages: list[dict],
+    task_type: str = "normal",
+    temperature: float = 0.3,
+    max_tokens: int = 4096,
+) -> str:
+    """Route a chat completion to the appropriate Nemotron model.
+
+    Args:
+        messages: OpenAI-format message list.
+        task_type: One of "simple", "normal", "hard", or "auto".
+                   When "auto", the system uses Lightning to classify first.
+        temperature: Sampling temperature.
+        max_tokens: Maximum tokens in the response.
+
+    Returns:
+        The assistant message content string.
+    """
+    if task_type == "auto":
+        last_user_msg = ""
+        for msg in reversed(messages):
+            if msg.get("role") == "user":
+                last_user_msg = msg.get("content", "")
+                break
+        context = "\n".join(
+            m.get("content", "") for m in messages[:-1] if m.get("role") == "system"
+        )
+        complexity = await classify_task_complexity(last_user_msg, context)
+    else:
+        complexity = task_type
+
+    model = get_model_for_task(complexity)
+
+    async with httpx.AsyncClient(timeout=120) as client:
+        resp = await client.post(
+            f"{NVIDIA_API}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {settings.nvidia_api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": model,
+                "messages": messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+            },
+        )
+        resp.raise_for_status()
+        return resp.json()["choices"][0]["message"]["content"]
