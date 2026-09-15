@@ -5,7 +5,7 @@ import { cn } from '@/lib/design-tokens';
 import { journeyTabs, stageColors, brandColor, type JourneyTabId, isTabAvailable } from '@/lib/design-tokens';
 import { lucideReact } from '@/lib/lucide-imports';
 
-const { Search, Shield, Edit, GitBranch, Code, CheckCircle, Gavel, BadgeCheck, ChevronRight, Lock, FolderGit2, FileCode } = lucideReact;
+const { Search, Shield, Edit, GitBranch, Code, CheckCircle, Gavel, BadgeCheck, ChevronRight, Lock, FolderGit2, FileCode, Settings } = lucideReact;
 
 const tabColors: Record<JourneyTabId, { icon: string; active: string; bg: string; completed: string }> = {
   Discover:  { icon: stageColors.Discover.icon,  active: stageColors.Discover.active,  bg: stageColors.Discover.bg,  completed: '#0e9f6e' },
@@ -96,15 +96,15 @@ export function Navigation() {
       </div>
 
       {/* Context */}
-      <div className="px-3 py-3 border-t border-[var(--color-surface-border)]">
-        <p className="text-[0.65rem] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider px-3 mb-2">Context</p>
-        <div className="space-y-1.5 px-1">
+      <div className="px-3 border-t border-[var(--color-surface-border)]">
+        <p className="text-[0.65rem] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider px-3 pt-3 pb-2">Context</p>
+        <div className="space-y-2 px-1 pb-3">
           {project && (
             <div className="flex items-center gap-2 min-w-0">
               <FolderGit2 size={12} className="text-[#5b66e8] flex-shrink-0" strokeWidth={2} />
               <div className="min-w-0">
-                <p className="text-[0.6rem] font-medium text-[var(--color-text-muted)] uppercase tracking-wider">Project</p>
-                <p className="text-[0.7rem] font-semibold text-[var(--color-text-primary)] truncate">{project.name}</p>
+                <p className="text-[0.6rem] font-medium text-[var(--color-text-muted)] uppercase tracking-wider leading-none">Project</p>
+                <p className="text-[0.7rem] font-semibold text-[var(--color-text-primary)] truncate leading-tight">{project.name}</p>
               </div>
             </div>
           )}
@@ -112,8 +112,8 @@ export function Navigation() {
             <div className="flex items-center gap-2 min-w-0">
               <GitBranch size={12} className="text-[#7c5ce0] flex-shrink-0" strokeWidth={2} />
               <div className="min-w-0">
-                <p className="text-[0.6rem] font-medium text-[var(--color-text-muted)] uppercase tracking-wider">Repository</p>
-                <p className="text-[0.7rem] font-semibold text-[var(--color-text-primary)] truncate">{repository.name}</p>
+                <p className="text-[0.6rem] font-medium text-[var(--color-text-muted)] uppercase tracking-wider leading-none">Repository</p>
+                <p className="text-[0.7rem] font-semibold text-[var(--color-text-primary)] truncate leading-tight">{repository.name}</p>
               </div>
             </div>
           )}
@@ -121,8 +121,8 @@ export function Navigation() {
             <div className="flex items-center gap-2 min-w-0">
               <FileCode size={12} className="text-[#3d86f4] flex-shrink-0" strokeWidth={2} />
               <div className="min-w-0">
-                <p className="text-[0.6rem] font-medium text-[var(--color-text-muted)] uppercase tracking-wider">Change</p>
-                <p className="text-[0.7rem] font-semibold text-[var(--color-text-primary)] truncate">{change.externalId || change.title}</p>
+                <p className="text-[0.6rem] font-medium text-[var(--color-text-muted)] uppercase tracking-wider leading-none">Change</p>
+                <p className="text-[0.7rem] font-semibold text-[var(--color-text-primary)] truncate leading-tight">{change.externalId || change.title}</p>
               </div>
             </div>
           )}
@@ -130,12 +130,28 @@ export function Navigation() {
             <div className="flex items-center gap-2 min-w-0">
               <Shield size={12} className="text-[var(--color-trust-protected)] flex-shrink-0" strokeWidth={2} />
               <div className="min-w-0">
-                <p className="text-[0.6rem] font-medium text-[var(--color-text-muted)] uppercase tracking-wider">Constitution</p>
-                <p className="text-[0.7rem] font-semibold text-[var(--color-text-primary)] truncate">{constitution.title}</p>
+                <p className="text-[0.6rem] font-medium text-[var(--color-text-muted)] uppercase tracking-wider leading-none">Constitution</p>
+                <p className="text-[0.7rem] font-semibold text-[var(--color-text-primary)] truncate leading-tight">{constitution.title}</p>
               </div>
             </div>
           )}
         </div>
+      </div>
+
+      {/* Footer: Loujan + Settings */}
+      <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--color-surface-border)]">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[var(--color-accent-tint)] border border-[var(--color-accent-soft)]">
+            <span className="text-[0.7rem] font-bold text-[var(--color-accent-primary)]">L</span>
+          </div>
+          <span className="text-[0.75rem] font-medium text-[var(--color-text-primary)]">Loujan</span>
+        </div>
+        <button
+          className="p-1.5 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-subtle)] transition-all"
+          aria-label="Settings"
+        >
+          <Settings size={16} strokeWidth={1.75} />
+        </button>
       </div>
     </nav>
   );
