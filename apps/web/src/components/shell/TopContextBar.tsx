@@ -60,38 +60,8 @@ export function TopContextBar() {
   return (
     <header className="h-[60px] sticky top-0 z-30 glass-header border-b border-[var(--color-surface-border)] flex-shrink-0">
       <div className="flex items-center justify-between h-full px-5 gap-3">
-        {/* Left: Project Context Pills */}
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          {project && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--color-surface-subtle)] border border-[var(--color-surface-border)]">
-              <FolderGit2 size={13} className="text-[#5b66e8]" strokeWidth={2} />
-              <div className="hidden sm:block">
-                <p className="text-[0.6rem] font-medium text-[var(--color-text-muted)] uppercase tracking-wider">Project</p>
-                <p className="text-[0.75rem] font-semibold text-[var(--color-text-primary)] truncate max-w-[180px]">{project.name}</p>
-              </div>
-            </div>
-          )}
-
-          {repository && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--color-surface-subtle)] border border-[var(--color-surface-border)]">
-              <GitBranch size={13} className="text-[#7c5ce0]" strokeWidth={2} />
-              <div className="hidden md:block">
-                <p className="text-[0.6rem] font-medium text-[var(--color-text-muted)] uppercase tracking-wider">Repository</p>
-                <p className="text-[0.75rem] font-semibold text-[var(--color-text-primary)] truncate max-w-[220px]">{repository.name}</p>
-              </div>
-            </div>
-          )}
-
-          {change && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--color-surface-subtle)] border border-[var(--color-surface-border)]">
-              <FileCode size={13} className="text-[#3d86f4]" strokeWidth={2} />
-              <div className="hidden lg:block">
-                <p className="text-[0.6rem] font-medium text-[var(--color-text-muted)] uppercase tracking-wider">Change</p>
-                <p className="text-[0.75rem] font-semibold text-[var(--color-text-primary)] truncate max-w-[280px]">{change.externalId || change.title}</p>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Left: empty — project context now lives in sidebar */}
+        <div className="flex items-center gap-2 flex-1 min-w-0" />
 
         {/* Center: Constitution */}
         {constitution && (

@@ -279,7 +279,7 @@ export function ConstitutionWorkspace({ onActivate }: { onActivate?: () => void 
           <div className="surface-card p-4">
             <div className="flex items-center gap-2 mb-4">
               <Clock size={20} className="text-[var(--color-trust-historical)]" />
-              <h3 className="text-subheading font-semibold text-[var(--color-trust-historical)]">Historical Memory (What Happened)</h3>
+              <h3 className="text-[0.875rem] font-semibold text-[var(--color-trust-historical)]">Historical Memory (What Happened)</h3>
             </div>
             <div className="space-y-3">
               {[
@@ -300,7 +300,7 @@ export function ConstitutionWorkspace({ onActivate }: { onActivate?: () => void 
           <div className="surface-card p-4">
             <div className="flex items-center gap-2 mb-4">
               <Settings size={20} className="text-[var(--color-trust-protected)]" />
-              <h3 className="text-subheading font-semibold text-[var(--color-trust-protected)]">Intent Memory (What Should Happen)</h3>
+              <h3 className="text-[0.875rem] font-semibold text-[var(--color-trust-protected)]">Intent Memory (What Should Happen)</h3>
             </div>
             <div className="space-y-3">
               {[

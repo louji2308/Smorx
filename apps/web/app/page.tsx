@@ -82,7 +82,9 @@ export default function HomePage() {
 
   return (
     <AppShell>
-      {renderTabContent()}
+      <div key={activeTab} className="animate-fade-up">
+        {renderTabContent()}
+      </div>
     </AppShell>
   );
 }

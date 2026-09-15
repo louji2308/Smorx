@@ -59,7 +59,7 @@ export function ArchaeologyLaunch() {
 
   if (results) {
     return (
-      <div className="space-y-5">
+      <div className="space-y-5 animate-fade-up">
         <Section title="Archaeology Complete" description="Evidence collected and behavioral findings generated.">
           <div className="flex justify-end">
             <button onClick={() => setResults(null)} className="btn btn--secondary btn-sm">Run Again</button>
@@ -89,7 +89,7 @@ export function ArchaeologyLaunch() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 animate-fade-up">
       <Section title="Software Archaeology" description="Reconstruct behavioral memory from source, history, tests, dependencies, runtime observations, and incidents.">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div className="lg:col-span-2 space-y-5">

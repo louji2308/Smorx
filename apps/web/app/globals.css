@@ -368,6 +368,24 @@ pre,
   @apply inline-flex items-center gap-1.5 px-3 py-1 text-caption font-medium rounded-full;
 }
 
+/* ---- Animated workflow line fill ---- */
+@keyframes lineFill {
+  from { transform: scaleY(0); transform-origin: top; }
+  to { transform: scaleY(1); transform-origin: top; }
+}
+.animate-line-fill {
+  animation: lineFill 0.4s ease-out forwards;
+}
+
+/* ---- Tab-switch fade-up ---- */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fadeUp 0.25s ease-out forwards;
+}
+
 /* ---- Glass morphism (accretion layers only) ---- */
 .glass-header {
   background: rgba(255, 255, 255, 0.70);

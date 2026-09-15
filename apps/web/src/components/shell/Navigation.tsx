@@ -5,7 +5,7 @@ import { cn } from '@/lib/design-tokens';
 import { journeyTabs, stageColors, brandColor, type JourneyTabId, isTabAvailable } from '@/lib/design-tokens';
 import { lucideReact } from '@/lib/lucide-imports';
 
-const { Search, Shield, Edit, GitBranch, Code, CheckCircle, Gavel, BadgeCheck, ChevronRight, Lock } = lucideReact;
+const { Search, Shield, Edit, GitBranch, Code, CheckCircle, Gavel, BadgeCheck, ChevronRight, Lock, FolderGit2, FileCode } = lucideReact;
 
 const tabColors: Record<JourneyTabId, { icon: string; active: string; bg: string; completed: string }> = {
   Discover:  { icon: stageColors.Discover.icon,  active: stageColors.Discover.active,  bg: stageColors.Discover.bg,  completed: '#0e9f6e' },
@@ -19,7 +19,7 @@ const tabColors: Record<JourneyTabId, { icon: string; active: string; bg: string
 };
 
 export function Navigation() {
-  const { activeTab, setActiveTab, workflow } = useAppStore();
+  const { activeTab, setActiveTab, workflow, project, repository, change, constitution } = useAppStore();
   const { completedStages, lockedStages } = workflow;
 
   const tabIcons: Record<JourneyTabId, React.ReactNode> = {
@@ -96,8 +96,8 @@ export function Navigation() {
       </div>
 
       {/* Workflow Progress */}
-      <div className="px-3 py-4 border-t border-[var(--color-surface-border)]">
-        <p className="text-[0.65rem] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider px-3 mb-3">Workflow Progress</p>
+      <div className="px-3 py-3">
+        <p className="text-[0.65rem] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider px-3 mb-2">Workflow Progress</p>
         <div className="space-y-1.5">
           {journeyTabs.map((tab, index) => {
             const completed = completedStages.includes(tab.id);
@@ -136,7 +136,10 @@ export function Navigation() {
                 </div>
                 {!isLast && (
                   <div
-                    className="absolute left-[9px] top-5 bottom-0 w-[1.5px]"
+                    className={cn(
+                      "absolute left-[9px] top-5 bottom-0 w-[1.5px]",
+                      completed && "animate-line-fill"
+                    )}
                     style={{ background: completed ? colors.completed : '#c2cdde' }}
                   />
                 )}
@@ -145,8 +148,49 @@ export function Navigation() {
           })}
         </div>
       </div>
+
+      {/* Context */}
+      <div className="px-3 py-3 border-t border-[var(--color-surface-border)]">
+        <p className="text-[0.65rem] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider px-3 mb-2">Context</p>
+        <div className="space-y-1.5 px-1">
+          {project && (
+            <div className="flex items-center gap-2 min-w-0">
+              <FolderGit2 size={12} className="text-[#5b66e8] flex-shrink-0" strokeWidth={2} />
+              <div className="min-w-0">
+                <p className="text-[0.6rem] font-medium text-[var(--color-text-muted)] uppercase tracking-wider">Project</p>
+                <p className="text-[0.7rem] font-semibold text-[var(--color-text-primary)] truncate">{project.name}</p>
+              </div>
+            </div>
+          )}
+          {repository && (
+            <div className="flex items-center gap-2 min-w-0">
+              <GitBranch size={12} className="text-[#7c5ce0] flex-shrink-0" strokeWidth={2} />
+              <div className="min-w-0">
+                <p className="text-[0.6rem] font-medium text-[var(--color-text-muted)] uppercase tracking-wider">Repository</p>
+                <p className="text-[0.7rem] font-semibold text-[var(--color-text-primary)] truncate">{repository.name}</p>
+              </div>
+            </div>
+          )}
+          {change && (
+            <div className="flex items-center gap-2 min-w-0">
+              <FileCode size={12} className="text-[#3d86f4] flex-shrink-0" strokeWidth={2} />
+              <div className="min-w-0">
+                <p className="text-[0.6rem] font-medium text-[var(--color-text-muted)] uppercase tracking-wider">Change</p>
+                <p className="text-[0.7rem] font-semibold text-[var(--color-text-primary)] truncate">{change.externalId || change.title}</p>
+              </div>
+            </div>
+          )}
+          {constitution && (
+            <div className="flex items-center gap-2 min-w-0">
+              <Shield size={12} className="text-[var(--color-trust-protected)] flex-shrink-0" strokeWidth={2} />
+              <div className="min-w-0">
+                <p className="text-[0.6rem] font-medium text-[var(--color-text-muted)] uppercase tracking-wider">Constitution</p>
+                <p className="text-[0.7rem] font-semibold text-[var(--color-text-primary)] truncate">{constitution.title}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </nav>
   );
 }
-
-

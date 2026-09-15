@@ -288,7 +288,7 @@ export default function AnalyzeTab() {
                         {meta.icon}
                       </div>
                       <div>
-                        <p className="text-code-sm font-bold font-mono" style={{ color: meta.color }}>{meta.label}</p>
+                        <p className="text-code-sm font-bold font-mono text-[var(--color-text-primary)]">{meta.label}</p>
                         <p className="text-caption font-mono text-[var(--color-text-muted)]">{c.id}</p>
                       </div>
                     </div>
@@ -303,17 +303,17 @@ export default function AnalyzeTab() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2 mt-3">
                     {c.independent && (
-                      <span className="pill border font-medium" style={{ background: '#F2EEFC', color: '#7C5CE0', borderColor: '#E3DBF6' }}>
+                      <span className="pill border font-medium" style={{ background: '#F2EEFC', color: '#46536B', borderColor: '#E3DBF6' }}>
                         <Shield size={12} /> Independent
                       </span>
                     )}
                     {c.result && (
                       <>
-                        <span className="pill border font-medium font-mono" style={{ background: '#EBF9F4', color: '#0E9F6E', borderColor: '#D4F1E7' }}>
+                        <span className="pill border font-medium font-mono" style={{ background: '#EBF9F4', color: '#46536B', borderColor: '#D4F1E7' }}>
                           {c.result.passed} passed
                         </span>
                         {c.result.failed > 0 && (
-                          <span className="pill border font-medium font-mono" style={{ background: '#FCEFEE', color: '#D8493C', borderColor: '#F5D5D3' }}>
+                          <span className="pill border font-medium font-mono" style={{ background: '#FCEFEE', color: '#46536B', borderColor: '#F5D5D3' }}>
                             {c.result.failed} failed
                           </span>
                         )}
