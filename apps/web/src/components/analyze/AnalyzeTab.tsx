@@ -207,7 +207,7 @@ export default function AnalyzeTab() {
                         type="button"
                         onClick={() => openDrawer('claim', { ...buildClaimDrawerData(surf.claimId as string, surf.reasoning, surf.risk) })}
                         className="pill border font-medium font-mono transition-all hover:shadow-sm"
-                        style={{ background: '#EDF1FE', color: '#4A6CF7', borderColor: '#DCE4FD' }}
+                        style={{ background: 'var(--color-ink-tint)', color: 'var(--color-ink)', borderColor: 'var(--color-ink-soft)' }}
                       >
                         <LinkIcon size={12} /> {surf.claimId}
                       </button>
@@ -239,7 +239,7 @@ export default function AnalyzeTab() {
                         type="button"
                         onClick={() => openDrawer('claim', { ...buildClaimDrawerData(claimId, zone.reasoning, zone.risk) })}
                         className="pill border font-medium font-mono transition-all hover:shadow-sm"
-                        style={{ background: '#EDF1FE', color: '#4A6CF7', borderColor: '#DCE4FD' }}
+                        style={{ background: 'var(--color-ink-tint)', color: 'var(--color-ink)', borderColor: 'var(--color-ink-soft)' }}
                       >
                         <LinkIcon size={12} /> {claimId}
                       </button>
@@ -383,7 +383,7 @@ export default function AnalyzeTab() {
                     </div>
                     <span className="text-[0.8rem] font-semibold text-[var(--color-text-primary)]">{phase.label}</span>
                     {isRunning && phaseIndex === i && (
-                      <span className="text-[0.65rem] font-mono text-[#4a6cf7] ml-auto">Running...</span>
+                      <span className="text-[0.65rem] font-mono text-[var(--color-text-muted)] ml-auto">Running...</span>
                     )}
                     {isRunning && phaseIndex > i && (
                       <span className="text-[0.65rem] font-mono text-[#0e9f6e] ml-auto">Done</span>

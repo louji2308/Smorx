@@ -11,7 +11,7 @@ import type { TrustState } from '@/types';
 const { Play, Search, Database, GitBranch, Terminal, FlaskConical, AlertTriangle, Clock, CheckCircle2, ChevronRight, Shield, Zap, Ghost, FileText } = lucideReact;
 
 const statColors = [
-  { label: 'Behaviors',     color: '#4a6cf7', tint: '#edf1fe', border: '#dce4fd' },
+  { label: 'Behaviors',     color: 'var(--color-ink)', tint: 'var(--color-ink-tint)', border: 'var(--color-ink-soft)' },
   { label: 'Invariants',    color: '#0e9f6e', tint: '#ebf9f4', border: '#d4f1e7' },
   { label: 'Incidents',     color: '#d8493c', tint: '#fcefee', border: '#f5d5d3' },
   { label: 'Dependencies',  color: '#c08a17', tint: '#fbf6e8', border: '#f2e7cc' },
@@ -29,7 +29,7 @@ export function ArchaeologyLaunch() {
   const [results, setResults] = useState<ArchaeologyResults | null>(null);
 
   const steps = [
-    { id: 'source', label: 'Source Analysis', icon: <Search size={15} strokeWidth={1.75} />, color: '#4a6cf7' },
+    { id: 'source', label: 'Source Analysis', icon: <Search size={15} strokeWidth={1.75} />, color: 'var(--color-ink)' },
     { id: 'git', label: 'Git History', icon: <GitBranch size={15} strokeWidth={1.75} />, color: '#7c5ce0' },
     { id: 'tests', label: 'Test Analysis', icon: <FlaskConical size={15} strokeWidth={1.75} />, color: '#0e9f6e' },
     { id: 'deps', label: 'Dependencies', icon: <Database size={15} strokeWidth={1.75} />, color: '#c08a17' },
@@ -184,7 +184,7 @@ export function ArchaeologyLaunch() {
                     </div>
                     <span className="text-[0.8rem] font-semibold text-[var(--color-text-primary)]">{step.label}</span>
                     {isRunning && currentStep === step.id && (
-                      <span className="text-[0.65rem] font-mono text-[#4a6cf7] ml-auto">Running...</span>
+                      <span className="text-[0.65rem] font-mono text-[var(--color-text-muted)] ml-auto">Running...</span>
                     )}
                     {results && (
                       <span className="text-[0.65rem] font-mono text-[#0e9f6e] ml-auto">Done</span>
@@ -198,10 +198,10 @@ export function ArchaeologyLaunch() {
                 <div className="mt-4">
                   <div className="flex items-center justify-between text-[0.7rem] font-medium mb-1.5">
                     <span className="text-[var(--color-text-secondary)]">Progress</span>
-                    <span className="font-mono text-[#4a6cf7]">{Math.round(progress)}%</span>
+                    <span className="font-mono text-[var(--color-ink)]">{Math.round(progress)}%</span>
                   </div>
                   <div className="h-2 bg-[var(--color-accent-soft)] rounded-full overflow-hidden">
-                    <div className="h-full bg-[#4a6cf7] rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+                    <div className="h-full bg-[var(--color-ink)] rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
                   </div>
                 </div>
               )}

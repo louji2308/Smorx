@@ -44,7 +44,7 @@ export function Navigation() {
           <Search size={18} strokeWidth={2} />
         </div>
         <div>
-          <h1 className="text-[0.95rem] font-bold text-[var(--color-text-primary)] tracking-tight font-display">Smorx</h1>
+          <h1 className="text-[1.05rem] font-medium text-[var(--color-text-primary)] tracking-wide font-brand">Smorx</h1>
           <p className="text-[0.65rem] font-medium text-[var(--color-text-muted)] tracking-wide uppercase">Behavioral OS</p>
         </div>
       </div>
@@ -69,14 +69,14 @@ export function Navigation() {
                 isActive && 'nav-item--active',
                 !available && 'nav-item--disabled',
               )}
-              style={isActive ? { background: colors.bg, color: colors.active } : undefined}
+              style={isActive ? { background: 'rgb(31 36 48 / 0.07)', color: '#1F2430' } : undefined}
               title={!available ? `${tab.label} requires previous stages to complete` : tab.description}
               aria-current={isActive ? 'page' : undefined}
               aria-disabled={!available}
             >
               <span
                 className="flex-shrink-0 transition-colors"
-                style={{ color: isActive ? colors.active : completed ? colors.completed : undefined }}
+                style={{ color: isActive ? colors.icon : completed ? colors.completed : undefined }}
               >
                 {tabIcons[tab.id]}
               </span>

@@ -42,7 +42,7 @@ const decisionStatusConfig: Record<DecisionSummary['status'], { color: string; t
 const decidePhases = [
   { id: 'eval', label: 'Evaluating behavioral deltas', color: '#E98C4E' },
   { id: 'align', label: 'Verifying intent alignment', color: '#0E9F6E' },
-  { id: 'authorize', label: 'Authorizing change', color: '#4A6CF7' },
+  { id: 'authorize', label: 'Authorizing change', color: 'var(--color-ink)' },
 ];
 
 function StatusPill({ label, color, tint, border }: { label: string; color: string; tint: string; border: string }) {
@@ -359,7 +359,7 @@ export default function DecideTab() {
                     {[
                       { label: 'Behavioral Delta', note: `${decision.entries.length} deltas observed`, color: '#E98C4E', tint: '#FDF1EA', border: '#F8DECF' },
                       { label: 'Intent Aligned', note: `${protectedAligned}/${protectedEntries.length} protected claims`, color: '#0E9F6E', tint: '#EBF9F4', border: '#D4F1E7' },
-                      { label: 'Authorized', note: 'Change #184 ready to certify', color: '#4A6CF7', tint: '#EDF1FE', border: '#DCE4FD' },
+                      { label: 'Authorized', note: 'Change #184 ready to certify', color: 'var(--color-ink)', tint: 'var(--color-ink-tint)', border: 'var(--color-ink-soft)' },
                     ].map((step, i) => (
                       <div key={step.label}>
                         <div
@@ -406,7 +406,7 @@ export default function DecideTab() {
                   className="flex items-center gap-3 p-3 rounded-xl border transition-all"
                   style={
                     active
-                      ? { background: phase.color + '10', borderColor: phase.color + '55' }
+                      ? { background: `color-mix(in srgb, ${phase.color} 10%, transparent)`, borderColor: `color-mix(in srgb, ${phase.color} 55%, #FFFFFF)` }
                       : done
                       ? { background: '#EBF9F4', borderColor: '#D4F1E7' }
                       : { background: '#F5F7FB', borderColor: '#E3E8F2' }
@@ -414,7 +414,7 @@ export default function DecideTab() {
                 >
                   <div
                     className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0"
-                    style={active ? { background: phase.color, color: 'white' } : done ? { background: '#0E9F6E', color: 'white' } : { background: phase.color + '15', color: phase.color }}
+                    style={active ? { background: phase.color, color: 'white' } : done ? { background: '#0E9F6E', color: 'white' } : { background: `color-mix(in srgb, ${phase.color} 15%, transparent)`, color: phase.color }}
                   >
                     {active ? (
                       <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />

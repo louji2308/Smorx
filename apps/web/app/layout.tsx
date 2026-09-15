@@ -1,16 +1,24 @@
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google';
+import { Cairo, Gruppo, JetBrains_Mono, Ubuntu } from 'next/font/google';
 import './globals.css';
 
-const inter = Inter({
+const cairo = Cairo({
   subsets: ['latin'],
   variable: '--font-sans',
   display: 'swap',
 });
 
-const spaceGrotesk = Space_Grotesk({
+const ubuntu = Ubuntu({
   subsets: ['latin'],
+  weight: ['400', '500', '700'],
   variable: '--font-display',
+  display: 'swap',
+});
+
+const gruppo = Gruppo({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-brand',
   display: 'swap',
 });
 
@@ -31,7 +39,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} antialiased`}
+      className={`${cairo.variable} ${ubuntu.variable} ${gruppo.variable} ${jetbrainsMono.variable} antialiased`}
     >
       <body className="min-h-screen bg-[var(--color-smoke)] text-[var(--color-text-primary)]">
         {children}

@@ -316,7 +316,7 @@ export default function DefineTab() {
                     </div>
                     <span className="text-[0.8rem] font-semibold text-[var(--color-text-primary)]">{phase.label}</span>
                     {isRunning && phaseIndex === i && (
-                      <span className="text-[0.65rem] font-mono text-[#4a6cf7] ml-auto">Running...</span>
+                      <span className="text-[0.65rem] font-mono text-[var(--color-text-muted)] ml-auto">Running...</span>
                     )}
                     {isRunning && phaseIndex > i && (
                       <span className="text-[0.65rem] font-mono text-[#0e9f6e] ml-auto">Done</span>

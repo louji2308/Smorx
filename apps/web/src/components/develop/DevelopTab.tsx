@@ -269,7 +269,7 @@ export function DevelopTab() {
                       className={cn(
                         'px-3 py-1.5 rounded-lg text-code-sm font-mono font-medium border transition-all',
                         selectedPatchId === patch.id
-                          ? 'bg-[#4A6CF7] text-white border-[#4A6CF7]'
+                          ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]'
                           : 'bg-white text-[var(--color-text-secondary)] border-[var(--color-surface-border)] hover:bg-[var(--color-surface-subtle)]',
                       )}
                     >
@@ -484,7 +484,7 @@ export function DevelopTab() {
                           )}
                         </span>
                         {state === 'running' ? (
-                          <span className="text-caption font-mono font-semibold text-[#4A6CF7] flex-shrink-0">Running…</span>
+                          <span className="text-caption font-mono font-semibold text-[var(--color-text-muted)] flex-shrink-0">Running…</span>
                         ) : state === 'done' ? (
                           <span className="flex-shrink-0">
                             <ExitCodeChip code={phase.exitCode} />
