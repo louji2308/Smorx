@@ -1,101 +1,88 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import styles from "./page.module.css";
+import { useEffect } from 'react';
+import { useAppStore } from '@/store/appStore';
+import { AppShell } from '@/components/shell/AppShell';
+import { DiscoverTab } from '@/components/discover/DiscoverTab';
+import { GovernTab } from '@/components/govern/GovernTab';
+import DefineTab from '@/components/define/DefineTab';
+import AnalyzeTab from '@/components/analyze/AnalyzeTab';
+import { DevelopTab } from '@/components/develop/DevelopTab';
+import { VerifyTab } from '@/components/verify/VerifyTab';
+import DecideTab from '@/components/decide/DecideTab';
+import CertifyTab from '@/components/certify/CertifyTab';
+import { createDemoJourney } from '@/lib/demo-journey';
 
-type HealthState = {
-  status: string | null;
-  json: Record<string, unknown> | null;
-  loaded: boolean;
-  error: string | null;
-  at: string | null;
-};
+export default function HomePage() {
+  const { activeTab, project, domain, setProject, setRepository, setChange, setConstitution, seedDomain } = useAppStore();
 
-const MAX_ATTEMPTS = 2;
-const RETRY_DELAY_MS = 800;
-
-export default function HealthPage() {
-  const [state, setState] = useState<HealthState>({
-    status: null,
-    json: null,
-    loaded: false,
-    error: null,
-    at: null,
-  });
-
+  // Initialize with demo data if not set
   useEffect(() => {
-    let cancelled = false;
-
-    async function checkHealth(): Promise<void> {
-      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
-        if (cancelled) return;
-        try {
-          const res = await fetch("/api/health");
-          if (!res.ok) {
-            throw new Error(`HTTP ${res.status} ${res.statusText}`);
-          }
-          const json: Record<string, unknown> = await res.json();
-          if (cancelled) return;
-          setState({
-            status: typeof json.status === "string" ? json.status : "unknown",
-            json,
-            loaded: true,
-            error: null,
-            at: new Date().toISOString(),
-          });
-          return;
-        } catch (err) {
-          if (cancelled) return;
-          const message = err instanceof Error ? err.message : String(err);
-          if (attempt >= MAX_ATTEMPTS) {
-            setState({
-              status: null,
-              json: null,
-              loaded: true,
-              error: message,
-              at: new Date().toISOString(),
-            });
-            return;
-          }
-          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
-        }
-      }
+    if (!project) {
+      setProject({
+        id: 'proj-1',
+        name: 'Payments API',
+        slug: 'payments-api',
+        description: 'Core payment processing service with authentication and tenant isolation',
+      });
+      setRepository({
+        id: 'repo-1',
+        name: 'github.com/acme/payments',
+        url: 'https://github.com/acme/payments',
+        defaultBranch: 'main',
+        lastInspectedAt: new Date().toISOString(),
+      });
+      setChange({
+        id: 'change-1',
+        externalId: '#184',
+        title: 'Replace authentication provider and add passkey login',
+        description: 'Migrate from legacy auth provider to new provider with passkey support while preserving password login, authorization, and session compatibility',
+        status: 'OPEN',
+        commitSha: 'e8d1a91c',
+      });
+      setConstitution({
+        id: 'const-1',
+        title: 'Behavioral Constitution v1.0',
+        version: 1,
+        status: 'ACTIVE',
+        claimCount: 42,
+        protectedCount: 32,
+        locked: true,
+      });
     }
 
-    void checkHealth();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    // Deterministic demo journey fixture for Change #184 (Define -> Certify)
+    if (!domain.intentLedger) {
+      seedDomain(createDemoJourney());
+    }
+  }, [project, domain.intentLedger, setProject, setRepository, setChange, setConstitution, seedDomain]);
 
-  const healthy = state.loaded && state.error === null && state.status === "ok";
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'Discover':
+        return <DiscoverTab />;
+      case 'Govern':
+        return <GovernTab />;
+      case 'Define':
+        return <DefineTab />;
+      case 'Analyze':
+        return <AnalyzeTab />;
+      case 'Develop':
+        return <DevelopTab />;
+      case 'Verify':
+        return <VerifyTab />;
+      case 'Decide':
+        return <DecideTab />;
+      case 'Certify':
+        return <CertifyTab />;
+      default:
+        return <DiscoverTab />;
+    }
+  };
 
   return (
-    <main className={styles.main}>
-      <h1 className={styles.heading}>System Health — Phase 0</h1>
-      <section className={styles.card}>
-        <dl>
-          <div className={styles.row}>
-            <dt>Backend status</dt>
-            <dd>{state.loaded && state.error === null ? state.status : "—"}</dd>
-          </div>
-          <div className={styles.row}>
-            <dt>Fetch succeeded</dt>
-            <dd>{state.loaded ? (state.error === null ? "yes" : "no") : "pending"}</dd>
-          </div>
-          <div className={styles.row}>
-            <dt>Timestamp</dt>
-            <dd>{state.at ?? "—"}</dd>
-          </div>
-        </dl>
-        <p className={!state.loaded ? styles.checking : healthy ? styles.ok : styles.failed}>
-          PHASE 0 HEALTH PATH: {!state.loaded ? "CHECKING" : healthy ? "OK" : "FAILED"}
-        </p>
-        {state.error !== null && <p className={styles.error}>Error: {state.error}</p>}
-        <pre className={styles.code}>
-          <code>{state.loaded ? JSON.stringify(state.json, null, 2) : "awaiting /api/health response…"}</code>
-        </pre>
-      </section>
-    </main>
+    <AppShell>
+      {renderTabContent()}
+    </AppShell>
   );
 }

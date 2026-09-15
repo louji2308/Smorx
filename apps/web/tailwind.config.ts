@@ -1,0 +1,107 @@
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './lib/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        surface: {
+          DEFAULT: '#ffffff',
+          subtle: '#eef1f8',
+          elevated: '#ffffff',
+          overlay: '#f5f7fb',
+          border: '#e3e8f2',
+          borderStrong: '#c2cdde',
+        },
+        trust: {
+          observed: '#5b6478',
+          protected: '#0e9f6e',
+          locked: '#7c5ce0',
+          unverified: '#c08a17',
+          violated: '#d8493c',
+          repair: '#e07b4a',
+          certified: '#14936b',
+          historical: '#8a94a8',
+        },
+        state: {
+          active: '#0e9f6e',
+          pending: '#d89a24',
+          failed: '#d8493c',
+          blocked: '#e98c4e',
+          draft: '#8a94a8',
+        },
+        text: {
+          primary: '#172033',
+          secondary: '#46536b',
+          muted: '#8a94a8',
+          inverse: '#ffffff',
+        },
+        accent: {
+          primary: '#4a6cf7',
+          primaryHover: '#3a56d6',
+          secondary: '#7c5ce0',
+          tint: '#edf1fe',
+          soft: '#dce4fd',
+        },
+      },
+      fontFamily: {
+        sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['var(--font-display)', 'var(--font-sans)', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'JetBrains Mono', 'Cascadia Code', 'SF Mono', 'Consolas', 'monospace'],
+      },
+      fontSize: {
+        'display': ['2.25rem', { lineHeight: '1.15', fontWeight: '700' }],
+        'title': ['1.5rem', { lineHeight: '1.3', fontWeight: '600' }],
+        'heading': ['1.125rem', { lineHeight: '1.4', fontWeight: '600' }],
+        'subheading': ['1rem', { lineHeight: '1.5', fontWeight: '600' }],
+        'body': ['0.875rem', { lineHeight: '1.6' }],
+        'body-sm': ['0.8125rem', { lineHeight: '1.5' }],
+        'caption': ['0.75rem', { lineHeight: '1.5' }],
+        'code': ['0.8125rem', { lineHeight: '1.6' }],
+        'code-sm': ['0.75rem', { lineHeight: '1.5' }],
+      },
+      borderRadius: {
+        'none': '0',
+        'sm': '6px',
+        'DEFAULT': '8px',
+        'md': '10px',
+        'lg': '14px',
+        'xl': '18px',
+        'full': '9999px',
+      },
+      boxShadow: {
+        'elevation-1': '0 1px 2px 0 rgb(0 0 0 / 0.04)',
+        'elevation-2': '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.04)',
+        'elevation-3': '0 10px 15px -3px rgb(0 0 0 / 0.06), 0 4px 6px -4px rgb(0 0 0 / 0.04)',
+        'elevation-4': '0 20px 25px -5px rgb(0 0 0 / 0.07), 0 8px 10px -6px rgb(0 0 0 / 0.04)',
+        'inset': 'inset 0 1px 2px 0 rgb(0 0 0 / 0.04)',
+        'focus': '0 0 0 3px rgb(74 108 247 / 0.16)',
+        'card': '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.03)',
+      },
+      zIndex: {
+        'base': '0',
+        'dropdown': '100',
+        'drawer': '200',
+        'modal': '300',
+        'popover': '400',
+        'tooltip': '500',
+        'toast': '600',
+      },
+      screens: {
+        'xs': '480px',
+        'sm': '640px',
+        'md': '768px',
+        'lg': '1024px',
+        'xl': '1280px',
+        '2xl': '1536px',
+      },
+    },
+  },
+  plugins: [],
+}
+export default config

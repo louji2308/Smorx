@@ -1,0 +1,498 @@
+import type {
+  Certificate,
+  CandidatePatch,
+  DecisionSummary,
+  DomainState,
+  ExecutionEvent,
+  ImpactAnalysis,
+  IntentItem,
+  IntentLedger,
+  VerificationPlan,
+  VerificationRun,
+} from '@/types';
+
+/**
+ * Demo journey fixture for Change #184 — "Replace authentication provider and add passkey login".
+ *
+ * Deterministic, reproducible demo state for the Define -> Certify journey tabs.
+ * This mirrors the documented web-app pattern ("fixture-driven tab UIs; backend wiring
+ * is a later phase") already used by Discover/Govern. All identifiers, counts, hashes,
+ * and traces are static fixture values — real backend wiring swaps this module later.
+ */
+
+const v = (ms: number) => new Date(Date.now() - ms).toISOString();
+
+const intentFixture: IntentItem[] = [
+  {
+    id: 'INT-184-01',
+    intentLedgerId: 'INT-184',
+    statement: 'Tenant isolation semantics MUST be fully preserved',
+    kind: 'PRESERVE',
+    priority: 'CRITICAL',
+    status: 'CONFIRMED' as const,
+    authorized: true,
+    sourceRef: 'AUTH-017',
+  },
+  {
+    id: 'INT-184-02',
+    intentLedgerId: 'INT-184',
+    statement: 'Legacy auth provider integration replaced behind the same public contract',
+    kind: 'REPLACE',
+    priority: 'HIGH',
+    status: 'CONFIRMED' as const,
+    authorized: true,
+    sourceRef: 'auth/provider.ts',
+  },
+  {
+    id: 'INT-184-03',
+    intentLedgerId: 'INT-184',
+    statement: 'Passkey login supported as a new credential method',
+    kind: 'ADD',
+    priority: 'HIGH',
+    status: 'CONFIRMED' as const,
+    authorized: true,
+    sourceRef: 'auth/passkey.ts',
+  },
+  {
+    id: 'INT-184-04',
+    intentLedgerId: 'INT-184',
+    statement: 'Credentials stay in-process; every auth state change emits an audit event',
+    kind: 'SECURITY',
+    priority: 'HIGH',
+    status: 'CONFIRMED' as const,
+    authorized: true,
+    sourceRef: 'AUD-011',
+  },
+  {
+    id: 'INT-184-05',
+    intentLedgerId: 'INT-184',
+    statement: 'Authentication caching retains the ~40% latency reduction',
+    kind: 'PERFORMANCE',
+    priority: 'NORMAL',
+    status: 'CONFIRMED' as const,
+    authorized: true,
+    sourceRef: 'CACHE-041',
+  },
+];
+
+const ledgerFixture: IntentLedger = {
+  id: 'INT-184',
+  changeId: 'change-1',
+  title: 'Auth Provider Migration + Passkey Login',
+  status: 'CONFIRMED',
+  background:
+    'Replace the legacy authentication provider integration with a modern provider while adding passkey login. ' +
+    'Password login, authorization semantics, tenant isolation, session compatibility, and audit completeness must be preserved.',
+  objectives: [
+    'Add passkey login as a new supported credential method',
+    'Replace the legacy auth provider integration behind the same public contract',
+  ],
+  constraints: [
+    'Tenant isolation MUST NOT be touched (AUTH-017)',
+    'Authorization decision logic MUST remain provider-agnostic (AUTH-022)',
+    'Session format and validation MUST stay backward compatible (AUTH-023)',
+    'Credential handling MUST remain in-process; audit events MUST be emitted (AUD-011)',
+    'Scope limited to auth/* and its tests',
+  ],
+  acceptanceCriteria: [
+    'AC-1: Existing auth test suite passes unmodified (42 tests)',
+    'AC-2: Cross-tenant access returns 403 (AUTH-017) under the adversarial tenant-switch suite',
+    'AC-3: Session tokens issued by the new provider validate identically (AUTH-023)',
+    'AC-4: Every auth state change emits an audit event (AUD-011)',
+    'AC-5: Authorization decisions are identical pre/post migration (AUTH-022)',
+    'AC-6: Passkey login end-to-end path demonstrable in the sandbox',
+  ],
+  authorizedBy: 'Engineering Lead — CR-184',
+  authorizationId: 'AUTH-SCOPE-184',
+};
+
+const impactFixture: ImpactAnalysis = {
+  id: 'IMP-184',
+  changeId: 'change-1',
+  status: 'COMPUTED',
+  summary:
+    'The change touches 5 of 8 auth surfaces. Four protected claims sit on the critical path. Tenant isolation is intentionally untouched and therefore at LOW risk.',
+  surfaces: [
+    {
+      id: 'SURF-1',
+      kind: 'FILE',
+      ref: 'auth/provider.ts',
+      label: 'Provider integration',
+      direction: 'REPLACE',
+      risk: 'HIGH',
+      reasoning: 'Integration surface replaced; public contract must be preserved (AUTH-031)',
+    },
+    {
+      id: 'SURF-2',
+      kind: 'FILE',
+      ref: 'auth/passkey.ts',
+      label: 'Passkey credential path',
+      direction: 'ADD',
+      risk: 'MEDIUM',
+      reasoning: 'New credential path added alongside the existing password flow',
+    },
+    {
+      id: 'SURF-3',
+      kind: 'FILE',
+      ref: 'auth/session.ts',
+      label: 'Session validation',
+      direction: 'TOUCH',
+      risk: 'HIGH',
+      reasoning: 'Session library swapped; compatibility constraint AUTH-023 applies',
+      claimId: 'AUTH-023',
+    },
+    {
+      id: 'SURF-4',
+      kind: 'FILE',
+      ref: 'auth/authorization.ts',
+      label: 'Authorization decision logic',
+      direction: 'UNTOUCHED',
+      risk: 'LOW',
+      reasoning: 'Decision logic must remain provider-agnostic (AUTH-022)',
+      claimId: 'AUTH-022',
+    },
+    {
+      id: 'SURF-5',
+      kind: 'FILE',
+      ref: 'middleware/tenant.ts',
+      label: 'Tenant isolation middleware',
+      direction: 'UNTOUCHED',
+      risk: 'LOW',
+      reasoning: 'Tenant isolation MUST NOT change (AUTH-017)',
+      claimId: 'AUTH-017',
+    },
+    {
+      id: 'SURF-6',
+      kind: 'FILE',
+      ref: 'auth/audit.ts',
+      label: 'Audit emission',
+      direction: 'TOUCH',
+      risk: 'HIGH',
+      reasoning: 'Audit completeness (AUD-011) must hold for new state changes',
+      claimId: 'AUD-011',
+    },
+    {
+      id: 'SURF-7',
+      kind: 'FILE',
+      ref: 'auth/cache.ts',
+      label: 'Auth caching',
+      direction: 'TOUCH',
+      risk: 'LOW',
+      reasoning: 'Latency profile (CACHE-041) preserved',
+    },
+  ],
+  riskZones: [
+    {
+      id: 'RZ-1',
+      name: 'Session Validation',
+      claimIds: ['AUTH-023'],
+      risk: 'HIGH',
+      reasoning: 'Token validation path is swapped; session compatibility is the top regression risk',
+    },
+    {
+      id: 'RZ-2',
+      name: 'Authorization Consistency',
+      claimIds: ['AUTH-022'],
+      risk: 'MEDIUM',
+      reasoning: 'Provider must not leak into authorization decisions',
+    },
+    {
+      id: 'RZ-3',
+      name: 'Audit Completeness',
+      claimIds: ['AUD-011'],
+      risk: 'HIGH',
+      reasoning: 'New passkey/auth state changes can silently bypass audit if undetected',
+    },
+    {
+      id: 'RZ-4',
+      name: 'Tenant Isolation',
+      claimIds: ['AUTH-017'],
+      risk: 'LOW',
+      reasoning: 'Guard-railed: no changes permitted in the tenant boundary',
+    },
+  ],
+  verificationContractId: 'VP-184',
+};
+
+const runCase = (
+  id: string,
+  planId: string,
+  kind: VerificationPlan['cases'][number]['kind'],
+  name: string,
+  expected: string,
+  passed: number,
+  failed: number,
+  skipped: number,
+  evidenceIds: string[],
+  status: 'PASSED' | 'FAILED' | 'PENDING' = 'PASSED',
+): VerificationPlan['cases'][number] => ({
+  id,
+  verificationPlanId: planId,
+  name,
+  kind,
+  expected,
+  status,
+  independent: true,
+  owningModule: 'verification/mutest',
+  evidenceIds,
+  result: { passed, failed, skipped, durationMs: passed * 40 + failed * 90 + skipped * 20 },
+});
+
+const contractFixture: VerificationPlan = {
+  id: 'VP-184',
+  changeId: 'change-1',
+  title: 'Verification Contract — Auth Provider Migration',
+  claimIds: ['AUTH-017', 'AUTH-022', 'AUTH-023', 'AUTH-031', 'AUD-011'],
+  modalities: [
+    'STATIC_ANALYSIS',
+    'DIFFERENTIAL_EXECUTION',
+    'HISTORICAL_GHOST_REPLAY',
+    'METAMORPHIC_CHECK',
+    'ADVERSARIAL_SCENARIO',
+    'MUTATION_TEST',
+  ],
+  status: 'LOCKED',
+  locked: true,
+  createdAt: v(3 * 3600_000),
+  cases: [
+    runCase('VC-01', 'VP-184', 'STATIC_ANALYSIS', 'Provider swap introduces no critical static findings', '0 critical, 12 total findings', 12, 0, 0, ['EV-201']),
+    runCase('VC-02', 'VP-184', 'DIFFERENTIAL_EXECUTION', 'Pre/post migration behavior identical across 14 auth scenarios', '14/14 scenarios identical', 14, 0, 0, ['EV-202']),
+    runCase('VC-03', 'VP-184', 'HISTORICAL_GHOST_REPLAY', '8 historical auth scenarios replay identically', '8/8 ghost replays identical', 8, 0, 0, ['EV-203']),
+    runCase('VC-04', 'VP-184', 'METAMORPHIC_CHECK', '7 auth invariants preserved under input transforms', '7/7 invariants hold', 7, 0, 0, ['EV-204']),
+    runCase('VC-05', 'VP-184', 'ADVERSARIAL_SCENARIO', '21 tenant-switch cases yield 0 cross-tenant leaks (AUTH-017)', '0 leaks across 21 switches', 21, 0, 0, ['EV-205']),
+    runCase('VC-06', 'VP-184', 'MUTATION_TEST', 'Session validation mutations are all killed by the suite', '7 mutants killed, 0 survivors', 7, 0, 0, ['EV-406'], 'PENDING'),
+  ],
+};
+
+const runsFixture: VerificationRun[] = [
+  {
+    id: 'VER-184-R1',
+    planId: 'VP-184',
+    label: 'Initial verification run',
+    status: 'COMPLETED',
+    startedAt: v(2 * 3600_000),
+    finishedAt: v(2 * 3600_000 - 90_000),
+    cases: [
+      runCase('VC-01', 'VP-184', 'STATIC_ANALYSIS', 'Provider swap introduces no critical static findings', '0 critical, 12 total findings', 12, 0, 0, ['EV-201']),
+      runCase('VC-02', 'VP-184', 'DIFFERENTIAL_EXECUTION', 'Pre/post migration behavior identical across 14 auth scenarios', '14/14 identical', 14, 0, 0, ['EV-202']),
+      runCase('VC-03', 'VP-184', 'HISTORICAL_GHOST_REPLAY', '8 historical auth scenarios replay identically', '8/8 identical', 8, 0, 0, ['EV-203']),
+      runCase('VC-04', 'VP-184', 'METAMORPHIC_CHECK', '7 auth invariants preserved under input transforms', '7/7 hold', 7, 0, 0, ['EV-204']),
+      runCase('VC-05', 'VP-184', 'ADVERSARIAL_SCENARIO', '21 tenant-switch cases yield 0 cross-tenant leaks', '0 leaks', 21, 0, 0, ['EV-205']),
+      runCase('VC-06', 'VP-184', 'MUTATION_TEST', 'Session validation mutations are all killed', '6/7 killed; 1 survivor', 6, 1, 0, ['EV-206'], 'FAILED'),
+    ],
+  },
+  {
+    id: 'VER-184-R2',
+    planId: 'VP-184',
+    label: 'Re-verification after repair F-183',
+    status: 'COMPLETED',
+    startedAt: v(3600_000),
+    finishedAt: v(3600_000 - 75_000),
+    cases: [
+      runCase('VC-01', 'VP-184', 'STATIC_ANALYSIS', 'Provider swap introduces no critical static findings', '0 critical, 12 total findings', 12, 0, 0, ['EV-401']),
+      runCase('VC-02', 'VP-184', 'DIFFERENTIAL_EXECUTION', 'Pre/post migration behavior identical across 14 auth scenarios', '14/14 identical', 14, 0, 0, ['EV-402']),
+      runCase('VC-03', 'VP-184', 'HISTORICAL_GHOST_REPLAY', '8 historical auth scenarios replay identically', '8/8 identical', 8, 0, 0, ['EV-403']),
+      runCase('VC-04', 'VP-184', 'METAMORPHIC_CHECK', '7 auth invariants preserved under input transforms', '7/7 hold', 7, 0, 0, ['EV-404']),
+      runCase('VC-05', 'VP-184', 'ADVERSARIAL_SCENARIO', '21 tenant-switch cases yield 0 cross-tenant leaks', '0 leaks', 21, 0, 0, ['EV-405']),
+      runCase('VC-06', 'VP-184', 'MUTATION_TEST', 'Session validation mutations are all killed', '7/7 killed; 0 survivors', 7, 0, 0, ['EV-406']),
+    ],
+  },
+];
+
+const exec = (id: string, runId: string, command: string, exitCode: number, durationMs: number, stdout: string): ExecutionEvent => ({
+  id,
+  runId,
+  kind: 'COMMAND',
+  command,
+  cwd: '/workspace',
+  exitCode,
+  stdout,
+  stderr: exitCode === 0 ? '' : 'see stdout',
+  durationMs,
+  status: exitCode === 0 ? 'COMPLETED' : 'FAILED',
+  startedAt: v(2 * 3600_000),
+  finishedAt: v(2 * 3600_000 - durationMs),
+  machineResult: { exitCode },
+});
+
+const patch1: CandidatePatch = {
+  id: 'PATCH-184-1',
+  changeId: 'change-1',
+  seq: 1,
+  title: 'Candidate Patch #1 — provider swap + passkey',
+  status: 'SUPERSEDED',
+  supersedes: undefined,
+  filesChanged: ['auth/provider.ts', 'auth/passkey.ts', 'auth/session.ts', 'auth/audit.ts', 'tests/auth/provider.test.ts', 'tests/auth/passkey.test.ts'],
+  additions: 312,
+  deletions: 158,
+  sandboxId: 'sb-184-a7f3',
+  constitutionBarrier: [
+    'AUTH-017 tenant isolation untouched',
+    'AUTH-022 authorization module untouched',
+    'AUTH-023 session contract preserved',
+    'AUTH-031 auth contract implemented by new provider',
+    'AUD-011 audit events on every auth state change',
+    'Scope limited to auth/* and tests',
+  ],
+  execution: [
+    exec('EXEC-301', 'RUN-301', 'npm ci', 0, 8_400, 'Dependencies installed (148 packages)'),
+    exec('EXEC-302', 'RUN-301', 'npm run build', 0, 21_300, 'Build succeeded (tsc + esbuild)'),
+    exec('EXEC-303', 'RUN-301', 'npm test -- --runInBand', 0, 34_200, '42 passed, 0 failed'),
+    exec('EXEC-304', 'RUN-301', 'node sandbox/diff-harness.mjs', 0, 12_900, 'Differential harness: 14 scenarios identical'),
+  ],
+  traces: [
+    { id: 'TRACE-301', command: 'npm ci', cwd: '/workspace', exitCode: 0, stdout: 'Dependencies installed (148 packages)', stderr: '', durationMs: 8400 },
+    { id: 'TRACE-302', command: 'npm run build', cwd: '/workspace', exitCode: 0, stdout: 'Build succeeded (tsc + esbuild)', stderr: '', durationMs: 21300 },
+    { id: 'TRACE-303', command: 'npm test -- --runInBand', cwd: '/workspace', exitCode: 0, stdout: '42 passed, 0 failed', stderr: '', durationMs: 34200 },
+    { id: 'TRACE-304', command: 'node sandbox/diff-harness.mjs', cwd: '/workspace', exitCode: 0, stdout: 'Differential harness: 14 scenarios identical', stderr: '', durationMs: 12900 },
+  ],
+  failureHistory: [],
+};
+
+const patch2: CandidatePatch = {
+  id: 'PATCH-184-2',
+  changeId: 'change-1',
+  seq: 2,
+  title: 'Repair Patch #2 — session validation guard',
+  status: 'RECOMMENDED',
+  supersedes: 'PATCH-184-1',
+  filesChanged: ['auth/session.ts', 'tests/auth/session.mutation.test.ts'],
+  additions: 14,
+  deletions: 3,
+  sandboxId: 'sb-184-a7f3',
+  constitutionBarrier: patch1.constitutionBarrier,
+  execution: [
+    exec('EXEC-401', 'RUN-303', 'npm run build', 0, 18_200, 'Build succeeded (tsc + esbuild)'),
+    exec('EXEC-402', 'RUN-303', 'npm test -- --runInBand', 0, 36_100, '43 passed, 0 failed'),
+    exec('EXEC-403', 'RUN-303', 'node sandbox/mutest.mjs --target auth/session.ts', 0, 15_700, 'Mutation suite: 7/7 mutants killed, 0 survivors'),
+  ],
+  traces: [
+    { id: 'TRACE-401', command: 'npm run build', cwd: '/workspace', exitCode: 0, stdout: 'Build succeeded (tsc + esbuild)', stderr: '', durationMs: 18200 },
+    { id: 'TRACE-402', command: 'npm test -- --runInBand', cwd: '/workspace', exitCode: 0, stdout: '43 passed, 0 failed', stderr: '', durationMs: 36100 },
+    { id: 'TRACE-403', command: 'node sandbox/mutest.mjs --target auth/session.ts', cwd: '/workspace', exitCode: 0, stdout: 'Mutation suite: 7/7 mutants killed, 0 survivors', stderr: '', durationMs: 15700 },
+  ],
+  failureHistory: [
+    {
+      id: 'F-183',
+      runId: 'VER-184-R1',
+      classification: 'acceptance-criterion failure',
+      evidenceId: 'EV-206',
+      notes:
+        'Mutation "doubled session expiration" survived the suite on PATCH-184-1. Session validation accepted a tampered expiry window — AUTH-023 acceptance risk.',
+    },
+  ],
+};
+
+const decisionFixture: DecisionSummary = {
+  id: 'DEC-184',
+  changeId: 'change-1',
+  status: 'REVIEWING',
+  entries: [
+    {
+      deltaId: 'DELTA-017',
+      claimId: 'AUTH-017',
+      claimLabel: 'Tenant isolation never violated',
+      classification: 'UNCHANGED',
+      alignment: 'ALIGNED',
+      magnitude: 0,
+      reasoning: 'Tenant boundary middleware untouched; adversarial suite confirms 0 leaks',
+      evidenceIds: ['EV-405'],
+    },
+    {
+      deltaId: 'DELTA-022',
+      claimId: 'AUTH-022',
+      claimLabel: 'Authorization semantics consistent',
+      classification: 'UNCHANGED',
+      alignment: 'ALIGNED',
+      magnitude: 0,
+      reasoning: 'Authorization decision module not modified; differential cases match 14/14',
+      evidenceIds: ['EV-402'],
+    },
+    {
+      deltaId: 'DELTA-023',
+      claimId: 'AUTH-023',
+      claimLabel: 'Session compatibility preserved',
+      classification: 'ALTERED',
+      alignment: 'ALIGNED',
+      magnitude: 0.02,
+      reasoning: 'Session lib swapped but validation contract preserved; repair F-183 closed the mutation gap',
+      evidenceIds: ['EV-406'],
+    },
+    {
+      deltaId: 'DELTA-031',
+      claimId: 'AUTH-031',
+      claimLabel: 'Authentication contract honored',
+      classification: 'ALTERED',
+      alignment: 'ALIGNED',
+      magnitude: 0.05,
+      reasoning: 'Provider integration replaced under identical public contract; contract cases pass',
+      evidenceIds: ['EV-401'],
+    },
+    {
+      deltaId: 'DELTA-011',
+      claimId: 'AUD-011',
+      claimLabel: 'Audit trail complete',
+      classification: 'ALTERED',
+      alignment: 'ALIGNED',
+      magnitude: 0.08,
+      reasoning: 'Audit coverage expanded to passkey events; metamorphic invariants hold',
+      evidenceIds: ['EV-404'],
+    },
+    {
+      deltaId: 'DELTA-041',
+      claimId: 'CACHE-041',
+      claimLabel: 'Auth caching latency profile',
+      classification: 'ALTERED',
+      alignment: 'ALIGNED',
+      magnitude: 0,
+      reasoning: 'Caching layer retained; latency profile intact (observed, not enforced)',
+      evidenceIds: ['EV-403'],
+    },
+  ],
+  summary: '1 unauthorized-change candidate was caught by mutation testing, repaired, and re-verified. All 5 protected claims align.',
+};
+
+const certificateFixture: Certificate = {
+  id: 'CERT-184-01',
+  certificateId: 'CERT-184-01',
+  changeId: 'change-1',
+  commit: 'e8d1a91c',
+  behavioralDeltaId: 'DEC-184',
+  verificationEvidenceIds: ['EV-401', 'EV-402', 'EV-403', 'EV-404', 'EV-405', 'EV-406'],
+  intentLedgerId: 'INT-184',
+  protectedBehaviors: [
+    'AUTH-017 tenant isolation',
+    'AUTH-022 authorization semantics',
+    'AUTH-023 session compatibility',
+    'AUTH-031 authentication contract',
+    'AUD-011 audit completeness',
+  ],
+  candidatePatchId: 'PATCH-184-2',
+  environment: { runtime: 'node 20', sandbox: 'sb-184-a7f3', os: 'linux' },
+  dependencyState: { 'auth-lib': '4.2.1 (locked)', 'passkey-sdk': '2.0.0 (locked)' },
+  status: 'ISSUED',
+  certificateHash: 'b3c9e17a4f08d2ce9a51f71b3c04a8e2d5b609f1c7a34e62487a0f5d9c1e2b73',
+  evidenceTraversal: [
+    'CERT-184-01 → INT-184 (intent ledger)',
+    'INT-184 → AUTH-017/AUTH-022/AUTH-023/AUTH-031/AUD-011 (claims)',
+    'DEC-184 → DELTA-017..DELTA-041 (behavioral deltas)',
+    'DELTA-023 → VER-184-R2 / VC-06 (experiment)',
+    'VC-06 → EV-406 (evidence)',
+    'EV-406 → EXEC-403 / TRACE-403 (execution trace)',
+    'TRACE-403 → sandbox sb-184-a7f3 (code / environment)',
+  ],
+  issuedAt: v(1800_000),
+};
+
+export function createDemoJourney(): DomainState {
+  return {
+    intentLedger: ledgerFixture,
+    intents: intentFixture,
+    impact: impactFixture,
+    verificationContract: contractFixture,
+    verificationRuns: runsFixture,
+    candidatePatches: [patch1, patch2],
+    decision: decisionFixture,
+    certificate: certificateFixture,
+  };
+}

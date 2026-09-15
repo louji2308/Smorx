@@ -1,7 +1,11 @@
+import { fileURLToPath } from "node:url";
+
+const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const apiBaseUrl = process.env.API_BASE_URL || "http://127.0.0.1:8000";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  outputFileTracingRoot: repoRoot,
   // eslint-config-next is wired in Phase 5; web lint is not a Phase 0 exit gate.
   eslint: {
     ignoreDuringBuilds: true,
