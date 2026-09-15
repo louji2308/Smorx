@@ -81,7 +81,7 @@ export function WorkflowProgress() {
                       !completed && 'scale-x-0',
                     )}
                     style={{
-                      background: `linear-gradient(90deg, ${colors.completed || '#0e9f6e'}, ${stageColors[journeyTabs[index + 1]?.id]?.completed || '#14936b'})`,
+                      background: `linear-gradient(90deg, #0e9f6e, #14936b)`,
                     }}
                   />
                 </div>
