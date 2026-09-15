@@ -42,16 +42,17 @@ const config: Config = {
           inverse: '#ffffff',
         },
         accent: {
-          primary: '#4a6cf7',
-          primaryHover: '#3a56d6',
-          secondary: '#7c5ce0',
-          tint: '#edf1fe',
-          soft: '#dce4fd',
+          primary: '#1F2430',
+          primaryHover: '#2A3038',
+          secondary: '#5B6478',
+          tint: '#EEF0F3',
+          soft: '#D8DCE2',
         },
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
         display: ['var(--font-display)', 'var(--font-sans)', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        brand: ['var(--font-brand)', 'var(--font-display)', 'var(--font-sans)', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
         mono: ['var(--font-mono)', 'ui-monospace', 'JetBrains Mono', 'Cascadia Code', 'SF Mono', 'Consolas', 'monospace'],
       },
       fontSize: {
@@ -80,7 +81,7 @@ const config: Config = {
         'elevation-3': '0 10px 15px -3px rgb(0 0 0 / 0.06), 0 4px 6px -4px rgb(0 0 0 / 0.04)',
         'elevation-4': '0 20px 25px -5px rgb(0 0 0 / 0.07), 0 8px 10px -6px rgb(0 0 0 / 0.04)',
         'inset': 'inset 0 1px 2px 0 rgb(0 0 0 / 0.04)',
-        'focus': '0 0 0 3px rgb(74 108 247 / 0.16)',
+        'focus': '0 0 0 3px rgb(31 36 48 / 0.16)',
         'card': '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.03)',
       },
       zIndex: {

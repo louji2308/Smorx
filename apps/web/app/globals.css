@@ -37,11 +37,19 @@
   --color-text-inverse: #ffffff;
 
   /* Accents — one bespoke brand accent; stage hues live in design-tokens */
-  --color-accent-primary: #4a6cf7;
-  --color-accent-primary-hover: #3a56d6;
-  --color-accent-tint: #edf1fe;
-  --color-accent-soft: #dce4fd;
-  --color-accent-secondary: #7c5ce0;
+  --color-accent-primary: #1F2430;
+  --color-accent-primary-hover: #2A3038;
+  --color-accent-tint: #EEF0F3;
+  --color-accent-soft: #D8DCE2;
+  --color-accent-secondary: #5B6478;
+
+  /* Charcoal ink ramp — signature interaction accent, cool-graphite */
+  --color-ink: #1F2430;
+  --color-ink-hover: #2A3038;
+  --color-ink-active: #141922;
+  --color-ink-tint: #EEF0F3;
+  --color-ink-soft: #D8DCE2;
+  --color-ink-muted: #5B6478;
 
   /* Smoke grey (subtle blue-tinted backgrounds) */
   --color-smoke: #f5f7fb;
@@ -49,8 +57,9 @@
   --color-smoke-border: #e3e8f2;
 
   /* Fonts */
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: 'Space Grotesk', 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: 'Cairo', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: 'Ubuntu', 'Cairo', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-brand: 'Gruppo', 'Ubuntu', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
 
   /* Typography scale */
@@ -93,7 +102,7 @@
   --shadow-elevation-3: 0 10px 15px -3px rgb(0 0 0 / 0.06), 0 4px 6px -4px rgb(0 0 0 / 0.04);
   --shadow-elevation-4: 0 20px 25px -5px rgb(0 0 0 / 0.07), 0 8px 10px -6px rgb(0 0 0 / 0.04);
   --shadow-inset: inset 0 1px 2px 0 rgb(0 0 0 / 0.04);
-  --shadow-focus: 0 0 0 3px rgb(74 108 247 / 0.16);
+  --shadow-focus: 0 0 0 3px rgb(31 36 48 / 0.16);
   --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.03);
 
   /* Border radius */
@@ -137,6 +146,7 @@ body {
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   line-height: 1.5;
+  letter-spacing: 0.015em;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -152,7 +162,14 @@ pre,
 
 .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
+}
+
+.font-brand {
+  font-family: var(--font-brand);
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 /* Focus styles */
@@ -180,7 +197,7 @@ pre,
 
 /* Selection */
 ::selection {
-  background-color: rgb(74 108 247 / 0.14);
+  background-color: rgb(31 36 48 / 0.12);
 }
 
 /* ---- Trust Badge Pills ---- */
@@ -238,11 +255,14 @@ pre,
 }
 .btn--primary {
   @apply text-white shadow-sm;
-  background: #4a6cf7;
+  background: var(--color-accent-primary);
 }
 .btn--primary:hover {
-  background: #3a56d6;
-  box-shadow: 0 2px 8px rgb(74 108 247 / 0.22);
+  background: var(--color-accent-primary-hover);
+  box-shadow: 0 2px 8px rgb(31 36 48 / 0.22);
+}
+.btn--primary:active {
+  background: #141922;
 }
 .btn--secondary {
   @apply bg-white text-[var(--color-text-secondary)] border border-[var(--color-surface-border)];
@@ -300,7 +320,7 @@ pre,
 }
 .nav-item--active {
   @apply text-[var(--color-accent-primary)] font-semibold;
-  background: rgb(74 108 247 / 0.07);
+  background: rgb(31 36 48 / 0.07);
 }
 .nav-item--disabled {
   @apply opacity-35 cursor-not-allowed;

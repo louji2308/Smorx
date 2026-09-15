@@ -148,13 +148,13 @@ export function getBehavioralObjectColor(type: BehavioralObjectType) {
 }
 
 /**
- * Brand accent — single bespoke action color (not generic UI-blue)
+ * Brand accent — single bespoke action color (cool-graphite charcoal ink)
  */
 export const brandColor = {
-  base: '#4A6CF7',
-  strong: '#3A56D6',
-  tint: '#EDF1FE',
-  soft: '#DCE4FD',
+  base: '#1F2430',
+  strong: '#141922',
+  tint: '#EEF0F3',
+  soft: '#D8DCE2',
 } as const;
 
 /**
