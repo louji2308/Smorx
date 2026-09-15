@@ -193,7 +193,7 @@ export function VerifyTab() {
                   const passedCount = run.cases.reduce((a, c) => a + (c.result?.passed ?? 0), 0);
                   const failedTotal = run.cases.reduce((a, c) => a + (c.result?.failed ?? 0), 0);
                   return (
-                    <div key={run.id} className="surface-card p-5 space-y-4">
+                     <div key={run.id} className="surface-card p-5 space-y-3">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
                           <p className="font-mono text-code-sm text-[var(--color-text-muted)]">{run.id}</p>
@@ -353,7 +353,7 @@ export function VerifyTab() {
               style={{ borderColor: runState === 'done' ? '#D4F1E7' : 'var(--color-surface-border)' }}
             >
               <div className="h-1 w-full" style={{ background: VER.active }} />
-              <div className="p-5 space-y-4">
+               <div className="p-5 space-y-3">
                 <div>
                   <h2 className="text-heading text-[var(--color-text-primary)]">Execute Verification Suite</h2>
                   <p className="text-body-sm text-[var(--color-text-muted)] mt-0.5">
@@ -361,7 +361,7 @@ export function VerifyTab() {
                   </p>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {suiteSteps.map((mod, index) => {
                     const state =
                       runState === 'running' && index === activeStep
@@ -373,7 +373,7 @@ export function VerifyTab() {
                       <div
                         key={index}
                         className={cn(
-                          'flex items-center gap-3 p-3 rounded-xl border transition-all',
+                          'flex items-center gap-3 p-2.5 rounded-xl border transition-all',
                           state === 'running' ? 'bg-[#FBF6E8] border-[#F2E7CC]' : 'bg-white border-[var(--color-surface-border)]',
                         )}
                       >

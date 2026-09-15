@@ -106,7 +106,7 @@ export function ArchaeologyLaunch() {
                   { label: 'Change', value: change?.externalId || change?.title || 'Not defined', color: '#3d86f4' },
                   { label: 'Constitution', value: constitution?.title || 'Not activated', color: '#0e9f6e' },
                 ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-xl">
+                  <div key={i} className="flex items-start gap-3 p-2.5 rounded-xl">
                     <div className="w-1 h-8 rounded-full mt-0.5" style={{ background: item.color }} />
                     <div>
                       <p className="text-[0.65rem] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">{item.label}</p>
@@ -120,7 +120,7 @@ export function ArchaeologyLaunch() {
             {/* Readiness */}
             <div className="surface-card p-5">
               <h2 className="text-[0.9rem] font-bold text-[var(--color-text-primary)] mb-3">Archaeology Readiness</h2>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {[
                   { label: 'Repository Connected', status: 'ready', detail: repository?.url, color: '#0e9f6e' },
                   { label: 'Git History Available', status: 'ready', detail: 'Full history accessible', color: '#0e9f6e' },
@@ -129,7 +129,7 @@ export function ArchaeologyLaunch() {
                   { label: 'Runtime Instrumentation', status: 'pending', detail: 'Requires sandbox', color: '#d89a24' },
                   { label: 'Incident Database', status: 'partial', detail: '7 historical incidents', color: '#8a94a8' },
                 ].map((check, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-xl">
+                  <div key={i} className="flex items-center justify-between p-2.5 rounded-xl">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-7 h-7 rounded-lg" style={{ background: check.color + '15', color: check.color }}>
                         {check.status === 'ready' ? <CheckCircle2 size={14} strokeWidth={2} /> : check.status === 'pending' ? <Clock size={14} strokeWidth={2} /> : <Search size={14} strokeWidth={2} />}
@@ -151,12 +151,12 @@ export function ArchaeologyLaunch() {
               <p className="text-[0.8rem] text-[var(--color-text-secondary)] mb-4 leading-relaxed">
                 Six independent investigation streams producing evidence-backed behavioral findings.
               </p>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {steps.map((step) => (
                   <div
                     key={step.id}
                     className={cn(
-                      'flex items-center gap-3 p-3 rounded-xl border transition-all',
+                      'flex items-center gap-3 p-2.5 rounded-xl border transition-all',
                       isRunning && currentStep === step.id
                         ? 'border-[var(--color-accent-soft)] bg-[var(--color-accent-tint)]'
                         : results

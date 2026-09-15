@@ -350,12 +350,12 @@ export default function AnalyzeTab() {
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
+               <div className="space-y-3">
                 {phases.map((phase, i) => (
                   <div
                     key={phase.id}
                     className={cn(
-                      'flex items-center gap-3 p-3 rounded-xl border transition-all',
+                      'flex items-center gap-3 p-2.5 rounded-xl border transition-all',
                       isRunning && phaseIndex === i
                         ? 'border-[var(--color-accent-soft)] bg-[var(--color-accent-tint)]'
                         : isRunning && phaseIndex > i

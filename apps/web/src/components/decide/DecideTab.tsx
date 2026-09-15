@@ -256,11 +256,11 @@ export default function DecideTab() {
                     <StatusPill {...{ color: '#14936B', tint: '#ECF8F4', border: '#D5EFE6' }} label="COMPLETED" />
                   </div>
                   <div className="grid grid-cols-2 gap-3 mt-3">
-                    <div className="p-3 rounded-xl">
-                      <p className="text-caption text-[var(--color-text-muted)] mb-0.5">Affected Claim</p>
-                      <p className="text-code-sm font-mono text-[var(--color-text-primary)]">{affectedClaim}</p>
-                    </div>
-                    <div className="p-3 rounded-xl">
+                     <div className="p-2.5 rounded-xl">
+                       <p className="text-caption text-[var(--color-text-muted)] mb-0.5">Affected Claim</p>
+                       <p className="text-code-sm font-mono text-[var(--color-text-primary)]">{affectedClaim}</p>
+                     </div>
+                     <div className="p-2.5 rounded-xl">
                       <p className="text-caption text-[var(--color-text-muted)] mb-0.5">Change Scope</p>
                       <p className="text-code-sm font-mono text-[var(--color-text-primary)] truncate">
                         {repairPatch?.filesChanged.join(', ') ?? 'auth/session.ts'}
@@ -403,7 +403,7 @@ export default function DecideTab() {
               return (
                 <div
                   key={phase.id}
-                  className="flex items-center gap-3 p-3 rounded-xl border transition-all"
+                   className="flex items-center gap-3 p-2.5 rounded-xl border transition-all"
                   style={
                     active
                       ? { background: `color-mix(in srgb, ${phase.color} 10%, transparent)`, borderColor: `color-mix(in srgb, ${phase.color} 55%, #FFFFFF)` }

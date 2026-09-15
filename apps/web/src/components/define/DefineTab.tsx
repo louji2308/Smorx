@@ -150,9 +150,9 @@ export default function DefineTab() {
 
         {/* Objectives */}
         <Section title="Objectives" description="The explicit outcomes this change is meant to deliver.">
-          <div className="space-y-3">
-            {ledger.objectives.map((objective, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl border" style={{ background: '#EBF9F4', borderColor: '#D4F1E7' }}>
+          <div className="space-y-2">
+              {ledger.objectives.map((objective, i) => (
+                <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl border" style={{ background: '#EBF9F4', borderColor: '#D4F1E7' }}>
                 <div className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0" style={{ background: '#EBF9F4', color: '#1EAF8C' }}>
                   <CheckCircle2 size={16} strokeWidth={2} />
                 </div>
@@ -164,11 +164,11 @@ export default function DefineTab() {
 
         {/* Constraints */}
         <Section title="Constraints" description="Constitutional boundaries the change may not cross.">
-          <div className="space-y-3">
+           <div className="space-y-2">
             {ledger.constraints.map((constraint, i) => {
               const refs = extractRefs(constraint);
               return (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl border" style={{ background: '#EBF9F4', borderColor: '#D4F1E7' }}>
+                <div key={i} className="flex items-start gap-3 p-2.5 rounded-xl border" style={{ background: '#EBF9F4', borderColor: '#D4F1E7' }}>
                   <div className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0" style={{ background: '#EBF9F4', color: '#0E9F6E' }}>
                     <Shield size={16} strokeWidth={2} />
                   </div>
@@ -195,11 +195,11 @@ export default function DefineTab() {
 
         {/* Acceptance Criteria */}
         <Section title="Acceptance Criteria" description="Objective measures that define what 'done' means for this change.">
-          <div className="space-y-3">
+           <div className="space-y-2">
             {ledger.acceptanceCriteria.map((criteria, i) => {
               const { id, text } = splitCriteria(criteria);
               return (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl">
+                <div key={i} className="flex items-start gap-3 p-2.5 rounded-xl">
                   <CheckCircle2 size={16} strokeWidth={2} className="mt-0.5 flex-shrink-0" style={{ color: '#0E9F6E' }} />
                   {id && (
                     <span className="pill border font-medium font-mono" style={{ background: '#EBF9F4', color: '#0E9F6E', borderColor: '#D4F1E7' }}>
@@ -283,12 +283,12 @@ export default function DefineTab() {
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
+               <div className="space-y-3">
                 {phases.map((phase, i) => (
                   <div
                     key={phase.id}
                     className={cn(
-                      'flex items-center gap-3 p-3 rounded-xl border transition-all',
+                      'flex items-center gap-3 p-2.5 rounded-xl border transition-all',
                       isRunning && phaseIndex === i
                         ? 'border-[var(--color-accent-soft)] bg-[var(--color-accent-tint)]'
                         : isRunning && phaseIndex > i

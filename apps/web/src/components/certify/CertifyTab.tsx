@@ -45,7 +45,7 @@ function truncateMiddle(value: string, keep = 10): string {
 
 function BoundField({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="p-3 rounded-xl">
+     <div className="p-2.5 rounded-xl">
       <p className="text-caption text-[var(--color-text-muted)] mb-0.5">{label}</p>
       <p className={mono ? 'text-body-sm font-mono text-[var(--color-text-primary)]' : 'text-body-sm text-[var(--color-text-primary)]'}>{value}</p>
     </div>
@@ -267,7 +267,7 @@ export default function CertifyTab() {
               return (
                 <div
                   key={phase.id}
-                  className="flex items-center gap-3 p-3 rounded-xl border transition-all"
+                   className="flex items-center gap-3 p-2.5 rounded-xl border transition-all"
                   style={
                     active
                       ? { background: phase.color + '10', borderColor: phase.color + '55' }

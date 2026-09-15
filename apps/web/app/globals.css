@@ -80,13 +80,13 @@
   --text-subheading--font-weight: 500;
 
   --text-body: 0.875rem;
-  --text-body--line-height: 1.6;
+  --text-body--line-height: 1.4;
 
   --text-body-sm: 0.8125rem;
-  --text-body-sm--line-height: 1.5;
+  --text-body-sm--line-height: 1.35;
 
   --text-caption: 0.75rem;
-  --text-caption--line-height: 1.5;
+  --text-caption--line-height: 1.35;
 
   --text-code: 0.8125rem;
   --text-code--line-height: 1.6;
@@ -145,7 +145,7 @@ body {
   background-color: var(--color-smoke);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
-  line-height: 1.5;
+  line-height: 1.4;
   letter-spacing: 0.015em;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;

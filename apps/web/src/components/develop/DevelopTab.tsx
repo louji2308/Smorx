@@ -157,7 +157,7 @@ export function DevelopTab() {
               </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="flex items-start gap-3 p-3 rounded-xl">
+              <div className="flex items-start gap-3 p-2.5 rounded-xl">
                 <div className="flex items-center justify-center w-8 h-8 rounded-lg" style={{ background: DEV.tint, color: DEV.strong }}>
                   <Server size={15} strokeWidth={1.75} />
                 </div>
@@ -166,7 +166,7 @@ export function DevelopTab() {
                   <p className="font-mono text-code-sm font-semibold text-[var(--color-text-primary)]">sb-184-a7f3</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-3 rounded-xl">
+              <div className="flex items-start gap-3 p-2.5 rounded-xl">
                 <div className="flex items-center justify-center w-8 h-8 rounded-lg" style={{ background: DEV.tint, color: DEV.strong }}>
                   <Terminal size={15} strokeWidth={1.75} />
                 </div>
@@ -175,7 +175,7 @@ export function DevelopTab() {
                   <p className="text-code-sm font-semibold text-[var(--color-text-primary)]">node 20 · linux</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-3 rounded-xl">
+              <div className="flex items-start gap-3 p-2.5 rounded-xl">
                 <div className="flex items-center justify-center w-8 h-8 rounded-lg" style={{ background: DEV.tint, color: DEV.strong }}>
                   <Hash size={15} strokeWidth={1.75} />
                 </div>
@@ -195,7 +195,7 @@ export function DevelopTab() {
           <div className="lg:col-span-3 space-y-5">
             {/* Candidate Patches */}
             <Section title="Candidate Patches" description="Constitution-aware candidate patches generated inside the sandbox.">
-              <div className="space-y-4">
+               <div className="space-y-2">
                 {candidatePatches.map((patch) => {
                   const statusStyle = statusStyles[patch.status];
                   return (
@@ -284,12 +284,12 @@ export function DevelopTab() {
                   )}
                 </div>
 
-                <div className="p-5 space-y-2">
+                 <div className="p-5 space-y-1">
                   {selectedPatch.execution.map((event) => (
                     <button
                       key={event.id}
                       onClick={() => openDrawer('execution-trace', { ...event })}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl border bg-white border-[var(--color-surface-border)] text-left transition-all hover:border-[var(--color-accent-soft)] hover:bg-[var(--color-accent-tint)]"
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl border bg-white border-[var(--color-surface-border)] text-left transition-all hover:border-[var(--color-accent-soft)] hover:bg-[var(--color-accent-tint)]"
                     >
                       <span className="flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0" style={{ background: DEV.tint, color: DEV.strong }}>
                         <Terminal size={15} strokeWidth={1.75} />
@@ -351,14 +351,14 @@ export function DevelopTab() {
               title="Constitution Barrier"
               description="Six protected gates the candidate must clear before recommendation."
             >
-              <div className="surface-card p-4 space-y-2">
+               <div className="surface-card p-4 space-y-1">
                 {patch2.constitutionBarrier.map((gate, i) => {
                   const passed = barrierPassed;
                   return (
                     <div
                       key={i}
                       className={cn(
-                        'flex items-center gap-3 p-3 rounded-xl border transition-all',
+                        'flex items-center gap-3 p-2.5 rounded-xl border transition-all',
                         passed
                           ? 'bg-[#EBF9F4] border-[#D4F1E7]'
                           : 'bg-[#FBF6E8] border-[#F2E7CC]',
@@ -438,7 +438,7 @@ export function DevelopTab() {
               style={{ borderColor: runState === 'done' ? '#D4F1E7' : 'var(--color-surface-border)' }}
             >
               <div className="h-1 w-full" style={{ background: DEV.active }} />
-              <div className="p-5 space-y-4">
+               <div className="p-5 space-y-3">
                 <div>
                   <h2 className="text-heading text-[var(--color-text-primary)]">Run Candidate in Sandbox</h2>
                   <p className="text-body-sm text-[var(--color-text-muted)] mt-0.5">
@@ -446,7 +446,7 @@ export function DevelopTab() {
                   </p>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {runPhases.map((phase, index) => {
                     const state = phaseStatus(index);
                     return (
