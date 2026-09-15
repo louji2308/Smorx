@@ -95,60 +95,6 @@ export function Navigation() {
         })}
       </div>
 
-      {/* Workflow Progress */}
-      <div className="px-3 py-3">
-        <p className="text-[0.65rem] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider px-3 mb-2">Workflow Progress</p>
-        <div className="space-y-1.5">
-          {journeyTabs.map((tab, index) => {
-            const completed = completedStages.includes(tab.id);
-            const current = activeTab === tab.id;
-            const isLast = index === journeyTabs.length - 1;
-            const colors = tabColors[tab.id];
-
-            return (
-              <div key={tab.id} className="relative">
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className="flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
-                    style={
-                      completed
-                        ? { background: colors.completed, borderColor: colors.completed }
-                        : current
-                        ? { background: 'white', borderColor: colors.active, boxShadow: `0 0 0 3px ${colors.bg}` }
-                        : { background: '#eef1f8', borderColor: '#e3e8f2' }
-                    }
-                  >
-                    {completed && <CheckCircle size={10} className="text-white" strokeWidth={3} />}
-                    {current && !completed && <span className="w-1.5 h-1.5 rounded-full" style={{ background: colors.active }} />}
-                  </div>
-                  <span
-                    className="text-[0.7rem] font-medium truncate"
-                    style={
-                      completed
-                        ? { color: colors.completed }
-                        : current
-                        ? { color: colors.active }
-                        : { color: '#8a94a8' }
-                    }
-                  >
-                    {tab.label}
-                  </span>
-                </div>
-                {!isLast && (
-                  <div
-                    className={cn(
-                      "absolute left-[9px] top-5 bottom-0 w-[1.5px]",
-                      completed && "animate-line-fill"
-                    )}
-                    style={{ background: completed ? colors.completed : '#c2cdde' }}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Context */}
       <div className="px-3 py-3 border-t border-[var(--color-surface-border)]">
         <p className="text-[0.65rem] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider px-3 mb-2">Context</p>

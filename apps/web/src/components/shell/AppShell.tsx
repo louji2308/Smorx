@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useAppStore } from '@/store/appStore';
 import { Navigation } from './Navigation';
-import { TopContextBar } from './TopContextBar';
+import { WorkflowProgress } from './WorkflowProgress';
 import { ContextDrawer } from '@/components/ui/ContextDrawer';
 import { cn } from '@/lib/design-tokens';
 import { lucideReact } from '@/lib/lucide-imports';
@@ -29,7 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Navigation />
       <main className="layout-main flex-1 flex flex-col overflow-hidden">
         <div className="layout-content flex-1 overflow-auto bg-[var(--color-smoke)]">
-          <TopContextBar />
+          <WorkflowProgress />
           {children}
         </div>
       </main>

@@ -368,13 +368,21 @@ pre,
   @apply inline-flex items-center gap-1.5 px-3 py-1 text-caption font-medium rounded-full;
 }
 
-/* ---- Animated workflow line fill ---- */
+/* ---- Animated workflow line fill (horizontal) ---- */
 @keyframes lineFill {
   from { transform: scaleY(0); transform-origin: top; }
   to { transform: scaleY(1); transform-origin: top; }
 }
 .animate-line-fill {
   animation: lineFill 0.4s ease-out forwards;
+}
+
+@keyframes gradientFill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.animate-gradient-fill {
+  animation: gradientFill 0.8s ease-out forwards;
 }
 
 /* ---- Tab-switch fade-up ---- */
