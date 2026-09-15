@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
-import { Cairo, Gruppo, JetBrains_Mono, Ubuntu } from 'next/font/google';
+import { DM_Sans, Gruppo, JetBrains_Mono, Ubuntu } from 'next/font/google';
 import './globals.css';
 
-const cairo = Cairo({
+const dmSans = DM_Sans({
   subsets: ['latin'],
+  weight: ['400', '500', '700'],
   variable: '--font-sans',
   display: 'swap',
 });
@@ -39,7 +40,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cairo.variable} ${ubuntu.variable} ${gruppo.variable} ${jetbrainsMono.variable} antialiased`}
+      className={`${dmSans.variable} ${ubuntu.variable} ${gruppo.variable} ${jetbrainsMono.variable} antialiased`}
     >
       <body className="min-h-screen bg-[var(--color-smoke)] text-[var(--color-text-primary)]">
         {children}

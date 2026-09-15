@@ -57,27 +57,27 @@
   --color-smoke-border: #e3e8f2;
 
   /* Fonts */
-  --font-sans: 'Cairo', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: 'Ubuntu', 'Cairo', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: 'Ubuntu', 'DM Sans', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-brand: 'Gruppo', 'Ubuntu', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
 
   /* Typography scale */
   --text-display: 2.25rem;
   --text-display--line-height: 1.15;
-  --text-display--font-weight: 700;
+  --text-display--font-weight: 500;
 
   --text-title: 1.5rem;
   --text-title--line-height: 1.3;
-  --text-title--font-weight: 600;
+  --text-title--font-weight: 500;
 
   --text-heading: 1.125rem;
   --text-heading--line-height: 1.4;
-  --text-heading--font-weight: 600;
+  --text-heading--font-weight: 500;
 
   --text-subheading: 1rem;
   --text-subheading--line-height: 1.5;
-  --text-subheading--font-weight: 600;
+  --text-subheading--font-weight: 500;
 
   --text-body: 0.875rem;
   --text-body--line-height: 1.6;
@@ -151,6 +151,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-synthesis: none;
 }
 
 code,
@@ -249,7 +250,7 @@ pre,
 
 /* ---- Buttons ---- */
 .btn {
-  @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-body font-medium rounded-full transition-all;
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-body font-normal rounded-full transition-all;
   transition-duration: var(--duration-fast);
   transition-timing-function: var(--ease-out);
 }
@@ -310,7 +311,7 @@ pre,
 
 /* ---- Navigation ---- */
 .nav-item {
-  @apply flex items-center gap-3 w-full px-3 py-2.5 text-body font-medium rounded-xl transition-all;
+  @apply flex items-center gap-3 w-full px-3 py-2.5 text-body font-normal rounded-xl transition-all;
   color: var(--color-text-secondary);
   transition-duration: var(--duration-fast);
   transition-timing-function: var(--ease-out);
@@ -319,7 +320,7 @@ pre,
   @apply bg-[var(--color-surface-subtle)] text-[var(--color-text-primary)];
 }
 .nav-item--active {
-  @apply text-[var(--color-accent-primary)] font-semibold;
+  @apply text-[var(--color-accent-primary)] font-medium;
   background: rgb(31 36 48 / 0.07);
 }
 .nav-item--disabled {
@@ -364,7 +365,7 @@ pre,
 
 /* ---- Pill badge utility ---- */
 .pill {
-  @apply inline-flex items-center gap-1.5 px-3 py-1 text-caption font-semibold rounded-full;
+  @apply inline-flex items-center gap-1.5 px-3 py-1 text-caption font-medium rounded-full;
 }
 
 /* ---- Glass morphism (accretion layers only) ---- */
