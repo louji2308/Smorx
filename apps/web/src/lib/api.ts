@@ -80,4 +80,10 @@ export const api = {
     apiFetch<{ plan_id: string; cases: any[]; count: number }>('/api/analysis/verification', { method: 'POST', body: JSON.stringify({ change_id: changeId }) }),
   makeDecision: (changeId: string) =>
     apiFetch<{ verdict: string; confidence: number; rationale: string; next_action: string }>('/api/analysis/decision', { method: 'POST', body: JSON.stringify({ change_id: changeId }) }),
+
+  sandboxExecute: (data: { repo_url: string; command: string; branch?: string; timeout?: number }) =>
+    apiFetch<{ sandbox_id: string; status: string; exit_code: number; stdout: string; stderr: string; duration: number }>('/api/workflow/sandbox/execute', { method: 'POST', body: JSON.stringify(data) }),
+
+  sandboxTest: (data: { repo_url: string; test_command?: string; branch?: string }) =>
+    apiFetch<{ sandbox_id: string; status: string; exit_code: number; stdout: string; stderr: string; duration: number }>('/api/workflow/sandbox/test', { method: 'POST', body: JSON.stringify(data) }),
 };

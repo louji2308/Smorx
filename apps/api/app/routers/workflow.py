@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from ..database import get_supabase
 from ..clients.nvidia import extract_intents, analyze_impact, generate_verification_plan, make_decision
 from ..clients.github import get_repo_analysis
+from ..clients.nebius import execute_in_sandbox, clone_and_analyze, run_tests
 from urllib.parse import urlparse
 
 router = APIRouter(prefix="/api/workflow", tags=["workflow"])
@@ -93,3 +94,43 @@ async def start_workflow(req: StartWorkflowRequest):
         "intents": intents,
         "impact": impact,
     }
+
+class SandboxExecuteRequest(BaseModel):
+    repo_url: str
+    command: str
+    branch: str = "main"
+    timeout: int = 300
+
+@router.post("/sandbox/execute")
+async def sandbox_execute(req: SandboxExecuteRequest):
+    try:
+        result = await execute_in_sandbox(
+            f"cd /tmp && git clone --depth 1 -b {req.branch} {req.repo_url} repo && cd repo && {req.command}",
+            timeout=req.timeout,
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class SandboxTestRequest(BaseModel):
+    repo_url: str
+    test_command: str = "npm test"
+    branch: str = "main"
+
+@router.post("/sandbox/test")
+async def sandbox_test(req: SandboxTestRequest):
+    try:
+        result = await run_tests(req.repo_url, req.test_command, req.branch)
+        db = get_supabase()
+        db.table("executions").insert({
+            "kind": "test",
+            "command": req.test_command,
+            "exit_code": result.get("exit_code"),
+            "stdout": result.get("stdout", ""),
+            "stderr": result.get("stderr", ""),
+            "duration_ms": int(result.get("duration", 0) * 1000) if result.get("duration") else None,
+            "status": "success" if result.get("exit_code") == 0 else "failed",
+        }).execute()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

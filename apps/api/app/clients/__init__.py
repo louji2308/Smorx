@@ -15,3 +15,13 @@ from .nvidia import (
     generate_verification_plan,
     make_decision,
 )
+from .nebius import (
+    whoami,
+    spawn_instance,
+    get_operation,
+    wait_for_operation,
+    execute_in_sandbox,
+    clone_and_analyze,
+    run_tests,
+    apply_patch_and_test,
+)
