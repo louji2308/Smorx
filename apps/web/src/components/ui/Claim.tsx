@@ -120,8 +120,8 @@ export const Claim = forwardRef<HTMLDivElement, ClaimProps>(
       >
         <div className="flex items-start justify-between gap-4 mb-3">
           <div className="flex items-center gap-2 flex-wrap">
-            <StateBadge state={claim.status} size="md" />
-            <span className="font-mono text-caption text-[var(--color-text-muted)]">{claim.claimId}</span>
+            <StateBadge state={claim.status} size="sm" />
+            <span className="font-mono text-[0.7rem] text-[var(--color-text-muted)]">{claim.claimId}</span>
             {claim.locked && <span className="text-[var(--color-trust-locked)] text-caption font-medium">LOCKED</span>}
           </div>
         </div>
@@ -131,7 +131,7 @@ export const Claim = forwardRef<HTMLDivElement, ClaimProps>(
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <p className="text-caption text-[var(--color-text-muted)] mb-1">Authority</p>
-            <p className="text-body font-mono font-medium">{claim.authority}</p>
+            <p className="text-body-sm font-mono font-medium">{claim.authority}</p>
           </div>
           <div>
             <p className="text-caption text-[var(--color-text-muted)] mb-1">Confidence</p>
@@ -160,14 +160,14 @@ export const Claim = forwardRef<HTMLDivElement, ClaimProps>(
 
         <div className="flex flex-wrap gap-2 mb-3">
           {claim.evidenceIds.length > 0 && (
-            <span className="flex items-center gap-1 px-2 py-1 text-caption bg-[var(--color-surface)] rounded border border-[var(--color-surface-border)]">
-              <FileText size={12} />
+            <span className="flex items-center gap-1 px-2 py-0.5 text-[0.7rem] bg-[var(--color-surface)] rounded border border-[var(--color-surface-border)]">
+              <FileText size={10} />
               {claim.evidenceIds.length} evidence
             </span>
           )}
           {claim.affectedSoftware && claim.affectedSoftware.length > 0 && (
-            <span className="flex items-center gap-1 px-2 py-1 text-caption bg-[var(--color-surface)] rounded border border-[var(--color-surface-border)]">
-              <GitBranch size={12} />
+            <span className="flex items-center gap-1 px-2 py-0.5 text-[0.7rem] bg-[var(--color-surface)] rounded border border-[var(--color-surface-border)]">
+              <GitBranch size={10} />
               {claim.affectedSoftware.length} components
             </span>
           )}

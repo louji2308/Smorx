@@ -35,7 +35,7 @@ export function GovernTab() {
               key={screen.id}
               onClick={() => setCurrentScreen(screen.id)}
               className={cn(
-                'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
+                'flex items-center gap-2 px-3 py-1.5 rounded-lg text-[0.8rem] font-medium transition-all',
                 currentScreen === screen.id
                   ? 'bg-[color-mix(in_srgb,_var(--color-accent-primary)_10%,_transparent)] text-[var(--color-accent-primary)] border border-[color-mix(in_srgb,_var(--color-accent-primary)_30%,_transparent)]'
                   : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)]',

@@ -151,14 +151,14 @@ export function ConstitutionWorkspace({ onActivate }: { onActivate?: () => void 
                 <Shield size={24} />
               </div>
               <div>
-                <h2 className="text-heading font-semibold">Behavioral Constitution v1.0</h2>
+                <h2 className="text-[0.9rem] font-semibold text-[var(--color-text-primary)]">Behavioral Constitution v1.0</h2>
                 <p className="text-body-sm text-[var(--color-text-muted)]">Active governing context for Change #184</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-[color-mix(in_srgb,_var(--color-trust-certified)_15%,_transparent)] text-[var(--color-trust-certified)] border border-[color-mix(in_srgb,_var(--color-trust-certified)_30%,_transparent)]">
                 <Lock size={14} />
-                <span className="text-body-sm font-medium">ACTIVE</span>
+                <span className="text-[0.7rem] font-medium">ACTIVE</span>
               </div>
               <div className="flex items-center gap-2">
                 <button className="btn btn--ghost btn-sm">
@@ -174,20 +174,20 @@ export function ConstitutionWorkspace({ onActivate }: { onActivate?: () => void 
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
             <div className="p-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-surface-border)]">
-              <p className="text-display font-semibold font-mono text-[var(--color-trust-protected)]">32</p>
-              <p className="text-caption text-[var(--color-text-muted)]">Protected</p>
+              <p className="text-[1.5rem] font-semibold font-mono text-[var(--color-trust-protected)]">32</p>
+              <p className="text-[0.7rem] text-[var(--color-text-muted)]">Protected</p>
             </div>
             <div className="p-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-surface-border)]">
-              <p className="text-display font-semibold font-mono text-[var(--color-trust-observed)]">7</p>
-              <p className="text-caption text-[var(--color-text-muted)]">Observed</p>
+              <p className="text-[1.5rem] font-semibold font-mono text-[var(--color-trust-observed)]">7</p>
+              <p className="text-[0.7rem] text-[var(--color-text-muted)]">Observed</p>
             </div>
             <div className="p-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-surface-border)]">
-              <p className="text-display font-semibold font-mono text-[var(--color-trust-unverified)]">3</p>
-              <p className="text-caption text-[var(--color-text-muted)]">Hypotheses</p>
+              <p className="text-[1.5rem] font-semibold font-mono text-[var(--color-trust-unverified)]">3</p>
+              <p className="text-[0.7rem] text-[var(--color-text-muted)]">Hypotheses</p>
             </div>
             <div className="p-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-surface-border)]">
-              <p className="text-display font-semibold font-mono text-[var(--color-trust-violated)]">0</p>
-              <p className="text-caption text-[var(--color-text-muted)]">Conflicts</p>
+              <p className="text-[1.5rem] font-semibold font-mono text-[var(--color-trust-violated)]">0</p>
+              <p className="text-[0.7rem] text-[var(--color-text-muted)]">Conflicts</p>
             </div>
           </div>
         </div>
@@ -204,9 +204,9 @@ export function ConstitutionWorkspace({ onActivate }: { onActivate?: () => void 
               placeholder="Search claims..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input w-full pl-10"
+              className="input w-full pl-9"
             />
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
           </div>
           <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--color-surface)] border border-[var(--color-surface-border)]">
             {authorities.map(a => (
@@ -214,7 +214,7 @@ export function ConstitutionWorkspace({ onActivate }: { onActivate?: () => void 
                 key={a}
                 onClick={() => setSelectedAuthority(a)}
                 className={cn(
-                  'px-3 py-1.5 rounded-md text-caption font-medium transition-all',
+                  'px-2.5 py-1 rounded-md text-[0.7rem] font-medium transition-all',
                   selectedAuthority === a
                     ? 'bg-[color-mix(in_srgb,_var(--color-accent-primary)_10%,_transparent)] text-[var(--color-accent-primary)]'
                     : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]',
