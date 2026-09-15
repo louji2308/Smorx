@@ -77,7 +77,7 @@ export function TopContextBar() {
               <GitBranch size={13} className="text-[#7c5ce0]" strokeWidth={2} />
               <div className="hidden md:block">
                 <p className="text-[0.6rem] font-medium text-[var(--color-text-muted)] uppercase tracking-wider">Repository</p>
-                <p className="text-[0.75rem] font-semibold text-[var(--color-text-primary)] font-mono truncate max-w-[220px]">{repository.name}</p>
+                <p className="text-[0.75rem] font-semibold text-[var(--color-text-primary)] truncate max-w-[220px]">{repository.name}</p>
               </div>
             </div>
           )}

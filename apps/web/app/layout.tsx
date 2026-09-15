@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import { DM_Sans, Gruppo, JetBrains_Mono, Ubuntu } from 'next/font/google';
+import { Plus_Jakarta_Sans, Gruppo, JetBrains_Mono, Ubuntu } from 'next/font/google';
 import './globals.css';
 
-const dmSans = DM_Sans({
+const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '700'],
+  weight: ['400', '500', '600', '700'],
   variable: '--font-sans',
   display: 'swap',
 });
@@ -40,7 +40,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${ubuntu.variable} ${gruppo.variable} ${jetbrainsMono.variable} antialiased`}
+      className={`${plusJakarta.variable} ${ubuntu.variable} ${gruppo.variable} ${jetbrainsMono.variable} antialiased`}
     >
       <body className="min-h-screen bg-[var(--color-smoke)] text-[var(--color-text-primary)]">
         {children}
