@@ -1,8 +1,48 @@
 # Progress — Software Evolution Intelligence System
 
 ## Current Phase
-- Phase: 11 — Certification (re-verify, certificate, integrity, archaeology, memory, merge gate) AND 12 — Full System Integration + Demo Reliability (`IMPLEMENTATION_PLAN.md` §11, §12) — THIS SESSION
-- Status: COMPLETE — Phase 11/12 modules landed, rewriter tests green, gates 11/12 PASS, full suite 653 passed, CI extended. Commits pending user approval.
+- Phase: 11 — Certification (re-verify, certificate, integrity, archaeology, memory, merge gate) AND 12 — Full System Integration + Demo Reliability (`IMPLEMENTATION_PLAN.md` §11, §12) — COMPLETE, plus `apps/web` white-theme UI redesign wave (user-requested) — IN PROGRESS
+- Status: Phase 11/12 COMPLETE (gates 11/12 PASS, full suite 653 passed). UI redesign advancing; Tailwind content-glob root cause fixed; commit of `apps/web` redesign pending user approval.
+
+## "Box inside a box" visual cleanup — nested gray rows flattened (2026-09-15)
+- User directive: stop rendering unnecessary nested boxes — inner rows (gray `--color-surface-subtle` + border) nested inside white `surface-card`s looked like box-in-box across tabs. Desired behavior: inner content shares the card's white background, exactly like the Analyze tab (content flat on the card).
+- Applied by three parallel subagents (non-overlapping file ownership) with a shared contract — flatten ONLY the default/idle state of nested gray rows; keep ALL running/active/done/hover state branches, colored icon chips, accent bars, dots, pills, real file/code chips, top-level grid cards:
+  - Agent A — `discover/ArchaeologyLaunch.tsx` (Project Context ×4, Readiness ×6, Investigation Scope idle branch, What-Is-Investigated ×6), `BehavioralKnowledgeGraph.tsx` (RelationshipPanel row), `define/DefineTab.tsx` (chip row, acceptance rows, phases idle branch). `ArchaeologyEvidenceWorkspace.tsx` + `DiscoverTab.tsx`: already flat / segmented control correctly, no change.
+  - Agent B — `analyze/AnalyzeTab.tsx` (phase idle branch → `border-transparent` to match repo's existing flat-row convention), `verify/VerifyTab.tsx` (Total Skipped box), `decide/DecideTab.tsx` (Affected Claim + Change Scope rows in Repair Package).
+  - Agent C — `develop/DevelopTab.tsx` (3 execution-event rows, outcome icon box → tinted `DEV.tint` chip, sandbox trace rows; KEPT per-file code chips), `certify/CertifyTab.tsx` (`BoundField` helper used by all 6 bound-artifact/evidence boxes).
+- Verification: `npx tsc --noEmit` exit 0 in all three agents. Browser (DevTools MCP): Discover Project Context 4 rows compute `background-color: rgba(0,0,0,0)`, `border-width 0`, `box-shadow none` inside the white `.surface-card` (`rgb(255,255,255)`); Certify bound-artifact boxes transparent; **console 0 messages**. Evidence: `docs/smorx-discover-flat.png`.
+- Uncommitted with the rest of `apps/web` (pending user approval, AGENTS.md §32).
+
+## Flat professional UI — gradients removed (2026-09-14)
+- User directive: "never use the purple and blue gradient anywhere." Removed **every** blue/purple/indigo/neutral gradient and decorative blur elements from `apps/web` (verified via source grep + DevTools: **0 elements with `background-image: gradient`** on the rendered page):
+  - `globals.css` — `.btn--primary` linear-gradient → solid `#4f46e5` (hover `#4338ca`, softer shadow).
+  - `Navigation.tsx` — brand logo `from-indigo-500 to-purple-600` → solid `bg-indigo-600`.
+  - `DiscoverTab.tsx` — segmented active gradient → solid `bg-indigo-600 text-white shadow-sm`.
+  - `TopContextBar.tsx` — constitution badge gradient → flat `bg-violet-50`.
+  - `PlaceholderTab.tsx` — hero redesigned flat: white `surface-card`, thin colored leader line, solid tint icon tile, muted status bar; **removed blur-2xl decorative circles and gradient backgrounds** (the 'common/AI look').
+  - `ArchaeologyLaunch.tsx` — progress bar gradient → solid `bg-indigo-600`.
+  - `AppShell.tsx` — EmptyState icon gradient → flat `bg-indigo-50`.
+- Professionalization: color now used only as restrained solid tints (single-tab identity + indigo primary action); flat surfaces/borders carry hierarchy; typography stays on the 3-tier system.
+- Browser verification (DevTools MCP): hero card `background-image: none` (white, `borderRadius 16px`, blue-50 leader + icon tile, smoke status bar); brand icon & segmented active = solid `#4f46e5`, white text, no gradient; **console 0 messages**. Evidence: `docs/smorx-professional-flat-ui.png`.
+- Uncommitted (pending user approval) with the rest of the `apps/web` redesign.
+
+## Typography upgrade wave — professional 3-tier type system (2026-09-14)
+- User request: "better fonts like professionals use, different styles properly." Installed a three-tier professional type system in `apps/web`:
+  - **Inter** (sans) — UI/body/navigation (already loaded via `next/font/google`, kept).
+  - **Space Grotesk** (display) — page titles (`JourneyPage` h1), brand wordmark ("Smorx"), placeholder hero headings; `letter-spacing: -0.01em`.
+  - **JetBrains Mono** (mono) — all code/pre/`font-mono` plus KPI stat numerals (36px, semibold, `tabular-nums`) in `ConstitutionWorkspace` (32/7/3/0) and `ArchaeologyLaunch` stat cards.
+- Files: `app/layout.tsx` (load `Space_Grotesk` + `JetBrains_Mono`, variables `--font-display`/`--font-mono` on `<html>`), `tailwind.config.ts` (`fontFamily.display`/`mono` added; display falls back through sans), `app/globals.css` (font tokens + `text-rendering: optimizeLegibility`, `.font-mono`/`code`/`pre` get `tabular-nums`, `.font-display` utility), `Navigation.tsx`, `AppShell.tsx`, `PlaceholderTab.tsx` (`font-display`), `GovernTab` stats, `ArchaeologyLaunch` stats.
+- Browser verification (DevTools MCP): body computed `Inter`; `h1` page titles + brand computed `Space Grotesk` (font-status `loaded`); code/stat numerals computed `JetBrains Mono` + `font-variant-numeric: tabular-nums`; **console 0 messages**; fonts fetched via Google Fonts at dev time (network OK). Evidence: `docs/smorx-fonts-devtools-verify.png`.
+- No package.json changes (all via `next/font/google`, self-hosted at build). Uncommitted (pending user approval), along with the rest of the UI redesign.
+
+## White-theme UI redesign wave — `apps/web` (2026-09-14, session continuation)
+- Root cause of the reported "tabs/text/icons/buttons not properly arranged" layout found and fixed: `apps/web/tailwind.config.ts` content globs did not include `./src/**/*`, so Tailwind never generated utility classes used inside `src/` (e.g. `w-[260px]`, `.w-full`, `flex-shrink-0`, `h-[60px]`). Sidebar rendered 144px (spec 260px) and header 427px (spec 60px) as a result. Fixed content globs; **dev-server restart required**; verified compiled CSS now contains `w-[260px]`/`w-full`/`fs0`/`h-[60px]` and live layout metrics: nav **260px**, header **60px**, content **660px**, hero card 1228×379, feature grid 3×399px, Discover 2-col grid 808/394px, segmented buttons 3×402px.
+- Applied the v0 design reference (chat `lT2u5gsVJaI`, plan approved; preview still generating at time of writing) directly in-repo: white theme with soft per-tab colors (Discover indigo, Govern violet, Define blue, Analyze sky, Develop teal, Verify amber, Decide orange, Certify pink), thin Lucide icons `strokeWidth 1.75`, pill shapes, smoke-grey accents, centered hero + feature cards.
+- Files rewritten: `app/globals.css` (light tokens, pastel trust badges, `.surface-card`, `.btn` pill, `.nav-item`, `.pill`, `.drawer`, light React Flow), `app/layout.tsx` (`bg-[#f3f4f6] text-[#111827]`), `app/page.tsx` (metadata), `tailwind.config.ts` (light palette + content globs), `src/components/shell/Navigation.tsx` (260px sidebar, per-tab color mapping is tabColor; fixed `{Icon}`→`{tabIcons[tab.id]}` dead-code bug), `TopContextBar.tsx`, `AppShell.tsx` (JourneyPage/Section/EmptyState/LoadingState/ErrorState), `PlaceholderTab.tsx` (hero + feature cards; removed duplicated description), `DiscoverTab.tsx`, `ArchaeologyLaunch.tsx` (colored stat cards, readiness, scope steps).
+- Contrast/theme fixes this wave: `--color-surface` changed `#ffffff`→`#f7f8fa` (nested surfaces inside white cards were white-on-white across 60+ components); behavioral object colors bumped `-400`→`-600` in `design-tokens.ts`, `ArchaeologyEvidenceWorkspace.tsx`, `BehavioralKnowledgeGraph.tsx`; TopContextBar pill/sub-label accents `-400`→`-500`.
+- Browser verification (DevTools MCP, page 1): console **0 messages** (no runtime errors); nested surface computes `rgb(247,248,250)`; Discovery launch view + Archaeology Evidence Workspace (7 categories, search, findings list) + Knowledge Graph (React Flow 1221×518, 13 nodes, 14 edges) all render; Govern workspace full claims table renders (32 Protected / 7 Observed / 3 Hypotheses / 0 Conflicts); archaeology re-run completed end-to-end in-browser (trust→OBSERVED, currentStage Govern, completedStages [Discover, Govern], activeTab Define, constitution 32/42 intact) — persistence intact.
+- Evidence: `docs/smorx-white-discover-launch.png`, `docs/smorx-white-define-hero.png`, `docs/smorx-define-tab-devtools.png`, `docs/smorx-white-theme-v2.png`.
+- Uncommitted: `apps/web/*` (outputs of the UI redesign). Commit only after user approval (AGENTS.md §32).
 
 ## Phase 11/12 — First session wave: chaining + orchestrate + replay/reliability + failure inject (2026-09-14)
 - Locked design: reconcile the scaffolded workflow tests with the LANDED modules rather than re-adding fakes. Real scenario-based `run_e2e_workflow` retained; ADDED `workflow_id`, `DEFAULT_PHASES` (12), `PHASE_EVENT_KINDS`, `run_phases`, deterministic-evidence caching, hash-chained run events, replay hash-chain validation, `idempotency_guard`, `cleanup_stale_sandboxes`, run-based resume+reset, `TEST_FAILURE` + `CONFLICTING_EVIDENCE` injection as REAL functionality; REWROTE tests to drive the real system (no `install_certification_fakes`).
@@ -295,3 +335,37 @@ Ask user for Nebius credentials; then run real integration tests + E2E proof; wr
 
 ## Notes
 - Chrome DevTools MCP was configured but not connected this session; raw CDP fallback used for evidence. State-lock wiring (`Navigation.tsx` `isTabAvailable`) is authoritative per source inspection + gate tests.
+
+## Color Theme Plan & Glass Morphism Wave (2026-09-14)
+
+### Role-based color usage plan (roles → hex → where → where NOT)
+| Role | Hex(es) | Where to use | Where NOT to use |
+|---|---|---|---|
+| Canvas (smoke) | `#f5f7fb` | page region only | never on cards/panels |
+| Surface elevated | `#ffffff` | cards, panels, drawers, popovers | never as page background |
+| Surface subtle | `#eef1f8` | inset areas, placeholders, status strips | never as elevated surface |
+| Border hairline | `#e3e8f2` | hairlines, dividers | never as accent |
+| Border strong | `#c2cdde` | strong lines, graph grid dots | never on text |
+| Text primary/secondary/muted/inverse | `#172033` / `#46536b` / `#8a94a8` / `#ffffff` | all body/heading/label copy | never as background fills |
+| Accent (single action) | `#4a6cf7` base, `#3a56d6` hover, `#edf1fe` tint, `#dce4fd` soft | primary buttons, active tabs, focus/borders, progress | never as arbitrary decoration |
+| Trust/semantic | observed `#5b6478`, protected `#0e9f6e`, locked `#7c5ce0`, unverified `#c08a17`, violated `#d8493c`, repair `#e07b4a`, certified `#14936b`, historical `#8a94a8` | trust badges, status chips, semantic icons | never for wayfinding alone |
+| State | active `#0e9f6e`, pending `#d89a24`, failed `#d8493c`, blocked `#e98c4e`, draft `#8a94a8` | workflow/readiness status | never as text on primary buttons |
+| Stage hues (wayfinding only) | Discover `#5b66e8`, Govern `#7c5ce0`, Define `#3d86f4`, Analyze `#22a7d4`, Develop `#1eaf8c`, Verify `#d89a24`, Decide `#e98c4e`, Certify `#db5f9c` | active tab, step dots, tiny tinted surfaces (`stageColors` in `src/lib/design-tokens.ts`) | never as full-page color, never as brand |
+| Behavioral constants | BEHAVIOR `#4a6cf7`, INVARIANT `#0e9f6e`, INCIDENT `#d8493c`, DEPENDENCY `#c08a17`, RISK_ZONE `#e98c4e`, GHOST `#7c5ce0` | behavioral graph nodes/legend, archaeology stats | never outside behavioral context |
+
+### Glass morphism placement policy
+- Accretion layers only: header/TopContextBar strip, drawers + backdrop, popovers — these float above data.
+- NEVER on data surfaces (cards, tables, graph canvas, evidence lists) or body backgrounds.
+- Accretion layers stay translucent smoke/white with palette hairlines; no unapproved blur beyond the defined layers.
+
+### Rules
+1. One accent — the `#4a6cf7` family is the only action color; everything else is semantic or neutral.
+2. Color = role. A color carrying no meaning must be neutral (text/surface tokens). No raw out-of-palette hexes in components.
+3. Prefer tokens (`var(--color-*)`, `bg-accent-primary`, stage/brand constants) over raw hex literals; arbitrary-value `[#...]` only with documented palette hexes.
+4. Stage hues are wayfinding-only and never express action or trust semantics.
+
+### Files & verification
+- This wave edited (palette enforcement): `src/components/discover/DiscoverTab.tsx`, `src/components/discover/ArchaeologyLaunch.tsx`, `src/components/discover/BehavioralKnowledgeGraph.tsx`, `src/components/shell/Navigation.tsx`, `src/components/shell/PlaceholderTab.tsx`. Color literals only — no logic, text, or layout changed.
+- Owned files handled by parallel agents (not edited here): `app/globals.css` (Agent A — legacy status-badge raw hex block ~lines 174–244 pending migration), `src/components/shell/AppShell.tsx` (Agent B — EmptyState `bg-red-50/border-red-100/text-red-500`), `src/components/shell/TopContextBar.tsx` (Agent B — out-of-palette `#6a4ed0`, `#5b44b8`, fallback `#6b7280`).
+- Out-of-scope / non-`.tsx` leftovers for orchestrator: `app/page.module.css` is orphaned dead code (not imported; dark-theme legacy hexes — recommend deletion); `tailwind.config.ts` `surface.borderStrong: '#d3dae7'` conflicts with documented border-strong `#c2cdde` (the latter is declared in `globals.css`) — value currently dormant (no class uses it).
+- Verification: `npx tsc --noEmit` → exit 0. Post-fix audits — legacy `text|bg|border-<palette>-NNN` class audit: 0 in writable scope (only owned `AppShell.tsx` remains); raw-hex audit in writable scope: only documented palette hexes remain (design-tokens.ts canonical block + stage/brand/behavioral constants). Archaeology smoke-test status is to be verified by the orchestrator.
